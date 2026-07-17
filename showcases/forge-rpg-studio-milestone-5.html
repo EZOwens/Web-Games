@@ -1,0 +1,4543 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#070a0f">
+<title>FORGE RPG Studio — Milestone 5</title>
+<style>
+:root {
+  --bg: #070a0f;
+  --panel: #0e1824;
+  --panel-2: #132131;
+  --panel-3: #182a3c;
+  --line: #2b4054;
+  --line-strong: #47647d;
+  --text: #f5f1e8;
+  --soft: #d8e2eb;
+  --muted: #94a5b7;
+  --gold: #f1c75b;
+  --gold-2: #ffe39b;
+  --cyan: #65dcec;
+  --green: #63dfa0;
+  --red: #f06773;
+  --violet: #b38dff;
+  --orange: #ff9a58;
+  --blue: #7496ff;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --font-scale: 1;
+  --motion-scale: 1;
+  --flash-opacity: .7;
+  --shadow-strength: .28;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  scroll-behavior: smooth;
+  background: var(--bg);
+  font-size: calc(16px * var(--font-scale));
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  color: var(--text);
+  background:
+    radial-gradient(circle at 12% 0%, rgba(101, 220, 236, .08), transparent 28rem),
+    radial-gradient(circle at 90% 10%, rgba(241, 199, 91, .08), transparent 30rem),
+    linear-gradient(180deg, #080b11, #06080c 55%, #090d13);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body[data-contrast="high"] {
+  --bg: #000;
+  --panel: #070707;
+  --panel-2: #0d0d0d;
+  --panel-3: #151515;
+  --line: #8297a8;
+  --line-strong: #fff;
+  --text: #fff;
+  --soft: #fff;
+  --muted: #d3d8dd;
+  --gold: #ffe252;
+  --gold-2: #fff1a2;
+  --cyan: #64f4ff;
+  --green: #74ffb5;
+  --red: #ff7882;
+  --violet: #c7a6ff;
+  --orange: #ffad68;
+  --shadow-strength: .05;
+}
+
+body[data-palette="deuteranopia"] {
+  --green: #56c8ff;
+  --red: #ff9f4f;
+  --gold: #ffd35c;
+  --cyan: #70e0ff;
+}
+
+body[data-palette="protanopia"] {
+  --green: #69d7ff;
+  --red: #ffb04d;
+  --gold: #ffe26b;
+  --cyan: #7ce6ff;
+}
+
+body[data-palette="tritanopia"] {
+  --green: #68e5a3;
+  --red: #ff7288;
+  --gold: #ffaf63;
+  --cyan: #99d8ff;
+  --violet: #ff8bd1;
+}
+
+body[data-motion="reduced"] {
+  --motion-scale: 0;
+}
+
+body[data-flash="reduced"] {
+  --flash-opacity: .12;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  color: inherit;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid var(--gold-2);
+  outline-offset: 3px;
+}
+
+button:disabled {
+  opacity: .42;
+  cursor: not-allowed;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+#ambient-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.ambient-vignette {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, .3), transparent 15%, transparent 85%, rgba(0, 0, 0, .3)),
+    linear-gradient(180deg, transparent 56%, rgba(0, 0, 0, .38));
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 90;
+  min-height: 74px;
+  padding: calc(8px + var(--safe-top)) 14px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, .07);
+  background: rgba(7, 10, 15, .92);
+  backdrop-filter: blur(18px) saturate(120%);
+}
+
+.brand {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-mark {
+  position: relative;
+  width: 50px;
+  height: 50px;
+  flex: 0 0 50px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(241, 199, 91, .55);
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 50% 56%, rgba(255, 227, 155, .9) 0 5px, transparent 6px),
+    linear-gradient(145deg, rgba(241, 199, 91, .14), rgba(101, 220, 236, .04));
+  box-shadow: 0 0 26px rgba(241, 199, 91, .09), inset 0 0 18px rgba(255, 255, 255, .03);
+}
+
+.brand-mark::before,
+.brand-mark::after {
+  content: "";
+  position: absolute;
+  width: 22px;
+  height: 1px;
+  background: var(--gold);
+}
+
+.brand-mark::before {
+  transform: translateY(-14px) scaleX(.25);
+}
+
+.brand-mark::after {
+  transform: translateY(15px);
+}
+
+.brand-copy {
+  min-width: 0;
+}
+
+.brand-copy strong,
+.brand-copy small {
+  display: block;
+}
+
+.brand-copy strong {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: .95rem;
+  letter-spacing: .16em;
+}
+
+.brand-copy small {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: .58rem;
+  letter-spacing: .09em;
+}
+
+.top-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.icon-button {
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #111a26;
+  cursor: pointer;
+}
+
+.icon-button:active {
+  transform: scale(.94);
+}
+
+.hero {
+  width: min(1180px, 100%);
+  margin: 0 auto;
+  padding: 48px 16px 28px;
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(290px, .85fr);
+  align-items: center;
+  gap: 26px;
+}
+
+.kicker {
+  margin: 0 0 10px;
+  color: var(--gold-2);
+  font-size: .66rem;
+  font-weight: 900;
+  letter-spacing: .2em;
+}
+
+.hero h1 {
+  margin: 0;
+  max-width: 780px;
+  font-size: clamp(3rem, 8vw, 6.7rem);
+  line-height: .84;
+  letter-spacing: -.065em;
+}
+
+.hero h1 span {
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(255, 255, 255, .48);
+}
+
+.hero-lede {
+  max-width: 720px;
+  margin: 22px 0 0;
+  color: var(--muted);
+  font-size: clamp(.9rem, 2vw, 1.04rem);
+  line-height: 1.7;
+}
+
+.hero-actions {
+  margin-top: 22px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.primary-button,
+.secondary-button,
+.mini-button {
+  min-height: 44px;
+  border-radius: 13px;
+  cursor: pointer;
+  font-weight: 850;
+  transition: transform calc(.18s * var(--motion-scale)) ease, border-color .18s ease, background .18s ease;
+}
+
+.primary-button {
+  padding: 10px 15px;
+  border: 1px solid var(--gold);
+  color: #171106;
+  background: linear-gradient(180deg, var(--gold-2), var(--gold));
+  box-shadow: 0 10px 28px rgba(241, 199, 91, .12);
+}
+
+.secondary-button,
+.mini-button {
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  background: #121d2a;
+}
+
+.primary-button:active,
+.secondary-button:active,
+.mini-button:active {
+  transform: scale(.96);
+}
+
+.hero-stat-grid {
+  margin-top: 24px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.hero-stat {
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(14, 22, 33, .72);
+}
+
+.hero-stat strong,
+.hero-stat small {
+  display: block;
+}
+
+.hero-stat strong {
+  color: var(--gold-2);
+  font-size: 1rem;
+}
+
+.hero-stat small {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: .55rem;
+}
+
+.hero-visual {
+  min-height: 390px;
+  display: grid;
+  place-items: center;
+}
+
+.production-orbit {
+  position: relative;
+  width: min(360px, 92vw);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+}
+
+.production-orbit::before,
+.production-orbit::after {
+  content: "";
+  position: absolute;
+  border: 1px solid rgba(241, 199, 91, .18);
+  border-radius: 50%;
+}
+
+.production-orbit::before {
+  inset: 8%;
+  animation: orbit-spin calc(23s / max(var(--motion-scale), .01)) linear infinite;
+}
+
+.production-orbit::after {
+  inset: 24%;
+  border-color: rgba(101, 220, 236, .2);
+  border-style: dashed;
+  animation: orbit-spin calc(14s / max(var(--motion-scale), .01)) linear infinite reverse;
+}
+
+body[data-motion="reduced"] .production-orbit::before,
+body[data-motion="reduced"] .production-orbit::after {
+  animation: none;
+}
+
+@keyframes orbit-spin {
+  to { transform: rotate(360deg); }
+}
+
+.production-core {
+  position: relative;
+  z-index: 2;
+  width: 148px;
+  height: 148px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(241, 199, 91, .55);
+  border-radius: 38px;
+  background:
+    radial-gradient(circle, rgba(241, 199, 91, .17), transparent 62%),
+    #101923;
+  box-shadow: 0 0 76px rgba(241, 199, 91, .13);
+}
+
+.production-core svg {
+  width: 92px;
+  height: 92px;
+}
+
+.orbit-chip {
+  position: absolute;
+  z-index: 3;
+  width: 88px;
+  min-height: 54px;
+  padding: 7px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  color: var(--chip);
+  background: #111b27;
+  font-size: .6rem;
+  font-weight: 900;
+  text-align: center;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, .24);
+}
+
+.orbit-chip:nth-child(2) { left: 1%; top: 42%; --chip: var(--cyan); }
+.orbit-chip:nth-child(3) { right: 1%; top: 42%; --chip: var(--red); }
+.orbit-chip:nth-child(4) { top: 3%; left: 50%; transform: translateX(-50%); --chip: var(--green); }
+.orbit-chip:nth-child(5) { bottom: 3%; left: 50%; transform: translateX(-50%); --chip: var(--violet); }
+
+.chapter-nav {
+  width: min(1180px, calc(100% - 24px));
+  margin: 0 auto 18px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.chapter-nav button {
+  min-height: 68px;
+  padding: 10px 12px;
+  text-align: left;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #101a26;
+  cursor: pointer;
+}
+
+.chapter-nav b,
+.chapter-nav small {
+  display: block;
+}
+
+.chapter-nav b {
+  color: var(--gold-2);
+  font-size: .7rem;
+}
+
+.chapter-nav small {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: .57rem;
+  line-height: 1.35;
+}
+
+main {
+  width: min(1180px, 100%);
+  margin: 0 auto;
+  padding: 0 12px calc(110px + var(--safe-bottom));
+}
+
+.chapter {
+  scroll-margin-top: 92px;
+  padding: 34px 0;
+}
+
+.chapter-head {
+  padding: 0 4px 16px;
+}
+
+.chapter-head h2 {
+  margin: 0;
+  font-size: clamp(1.7rem, 4vw, 2.8rem);
+  letter-spacing: -.04em;
+}
+
+.chapter-head p {
+  max-width: 760px;
+  margin: 8px 0 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.exhibit-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.exhibit {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(18, 31, 45, .94), rgba(11, 19, 28, .96));
+  box-shadow: 0 20px 50px rgba(0, 0, 0, var(--shadow-strength));
+  overflow: hidden;
+}
+
+.exhibit.wide {
+  grid-column: 1 / -1;
+}
+
+.exhibit-head {
+  padding: 16px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  border-bottom: 1px solid rgba(255, 255, 255, .06);
+}
+
+.exhibit-num {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(241, 199, 91, .36);
+  border-radius: 11px;
+  color: var(--gold-2);
+  font-size: .7rem;
+  font-weight: 900;
+  background: rgba(241, 199, 91, .07);
+}
+
+.exhibit-head h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.exhibit-head p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: .7rem;
+  line-height: 1.45;
+}
+
+.exhibit-body {
+  padding: 14px;
+}
+
+.panel {
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: #0c1520;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+label {
+  display: grid;
+  gap: 5px;
+  color: var(--muted);
+  font-size: .64rem;
+  font-weight: 700;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: 9px 10px;
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #0b141f;
+}
+
+textarea {
+  min-height: 130px;
+  resize: vertical;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: .67rem;
+  line-height: 1.48;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 5px 9px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--soft);
+  background: #111d2a;
+  font-size: .62rem;
+  font-weight: 800;
+}
+
+.chip.good { color: var(--green); }
+.chip.warn { color: var(--orange); }
+.chip.bad { color: var(--red); }
+.chip.info { color: var(--cyan); }
+
+.muted {
+  color: var(--muted);
+}
+
+.tiny {
+  font-size: .62rem;
+  line-height: 1.45;
+}
+
+.character-layout {
+  display: grid;
+  grid-template-columns: minmax(250px, .85fr) minmax(0, 1.15fr);
+  gap: 12px;
+}
+
+.character-stage {
+  min-height: 390px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 50% 20%, rgba(101, 220, 236, .12), transparent 13rem),
+    linear-gradient(180deg, #152536, #09121b);
+  overflow: hidden;
+}
+
+#character-svg {
+  width: min(280px, 92%);
+  height: auto;
+  filter: drop-shadow(0 18px 24px rgba(0, 0, 0, .35));
+}
+
+.character-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 7px;
+  margin-top: 10px;
+}
+
+.character-stat {
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  text-align: center;
+  background: #101b28;
+}
+
+.character-stat strong,
+.character-stat small {
+  display: block;
+}
+
+.character-stat strong {
+  color: var(--gold-2);
+}
+
+.character-stat small {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: .55rem;
+}
+
+.resource-stack {
+  display: grid;
+  gap: 8px;
+}
+
+.resource-meter {
+  position: relative;
+  height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+  background: #071019;
+}
+
+.resource-meter .fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--value);
+  background: linear-gradient(90deg, var(--dark), var(--meter));
+  transition: width calc(.35s * var(--motion-scale)) ease;
+}
+
+.resource-meter .label {
+  position: absolute;
+  inset: 0;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: .66rem;
+  font-weight: 900;
+  text-shadow: 0 1px 2px #000;
+}
+
+.inventory-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(210px, .72fr);
+  gap: 10px;
+}
+
+.inventory-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 7px;
+}
+
+.item-slot {
+  position: relative;
+  aspect-ratio: 1;
+  padding: 5px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #101b27;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.item-slot.selected {
+  border-color: var(--gold-2);
+  box-shadow: 0 0 0 1px var(--gold-2);
+}
+
+.item-slot.empty {
+  opacity: .38;
+}
+
+.item-slot svg {
+  width: 100%;
+  height: 100%;
+}
+
+.qty {
+  position: absolute;
+  right: 4px;
+  bottom: 3px;
+  min-width: 18px;
+  padding: 2px 4px;
+  border-radius: 999px;
+  background: #070a0f;
+  font-size: .55rem;
+  font-weight: 900;
+  text-align: center;
+}
+
+.world-layout {
+  display: grid;
+  grid-template-columns: 1.05fr .95fr;
+  gap: 10px;
+}
+
+.map-stage,
+.first-person-stage {
+  position: relative;
+  min-height: 360px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  overflow: hidden;
+  background: #071019;
+  touch-action: pan-y;
+}
+
+.map-stage canvas,
+.first-person-stage canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.map-overlay {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  pointer-events: none;
+}
+
+.compass {
+  position: absolute;
+  right: 9px;
+  top: 9px;
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, .18);
+  border-radius: 50%;
+  background: rgba(7, 10, 15, .82);
+  font-weight: 900;
+}
+
+.dpad {
+  display: grid;
+  grid-template-columns: repeat(3, 52px);
+  justify-content: center;
+  gap: 6px;
+  margin-top: 9px;
+}
+
+.dpad button {
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: #111d2a;
+}
+
+.dpad button:first-child { grid-column: 2; }
+.dpad button:nth-child(2) { grid-column: 1; grid-row: 2; }
+.dpad button:nth-child(3) { grid-column: 2; grid-row: 2; }
+.dpad button:nth-child(4) { grid-column: 3; grid-row: 2; }
+
+.dialogue-layout {
+  display: grid;
+  grid-template-columns: .75fr 1.25fr;
+  gap: 10px;
+}
+
+.portrait-card {
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: #0b151f;
+}
+
+.portrait-card svg {
+  width: 100%;
+  max-height: 260px;
+}
+
+.dialogue-box {
+  min-height: 210px;
+  padding: 13px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: #09131d;
+}
+
+.choice-list {
+  display: grid;
+  gap: 7px;
+}
+
+.choice-button {
+  min-height: 48px;
+  padding: 9px 11px;
+  text-align: left;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #111d2a;
+}
+
+.choice-button small {
+  display: block;
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: .54rem;
+}
+
+.battlefield {
+  position: relative;
+  min-height: 450px;
+  border: 1px solid var(--line);
+  border-radius: 21px;
+  background:
+    linear-gradient(180deg, #384b60 0 34%, #26353b 35% 63%, #11191e 64%),
+    radial-gradient(circle at 50% 30%, rgba(255, 255, 255, .08), transparent 18rem);
+  overflow: hidden;
+}
+
+.combatant {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: 86px;
+  min-height: 116px;
+  padding: 4px;
+  border: 0;
+  background: transparent;
+  transform: translate(-50%, -50%) scale(var(--scale, 1));
+  transition:
+    transform calc(.22s * var(--motion-scale)) ease,
+    filter calc(.2s * var(--motion-scale)) ease,
+    opacity .2s ease;
+}
+
+.combatant.valid-target {
+  filter: drop-shadow(0 0 14px var(--cyan));
+}
+
+.combatant.invalid-target {
+  opacity: .25;
+}
+
+.combatant.active-turn {
+  filter: drop-shadow(0 0 14px var(--gold-2));
+}
+
+.combatant.defeated {
+  opacity: .3;
+  filter: grayscale(1);
+}
+
+.combatant svg {
+  width: 100%;
+  height: 82px;
+}
+
+.combatant-name {
+  display: block;
+  font-size: .54rem;
+  font-weight: 900;
+  text-shadow: 0 2px 3px #000;
+}
+
+.hp-line {
+  height: 8px;
+  border: 1px solid rgba(255, 255, 255, .15);
+  border-radius: 999px;
+  overflow: hidden;
+  background: #081017;
+}
+
+.hp-line span {
+  display: block;
+  width: var(--hp);
+  height: 100%;
+  background: linear-gradient(90deg, #9c2d38, var(--red));
+}
+
+.turn-order {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  overflow-x: auto;
+}
+
+.turn-card {
+  min-width: 92px;
+  padding: 7px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: #101b28;
+  font-size: .54rem;
+}
+
+.turn-card.active {
+  border-color: var(--gold-2);
+}
+
+.command-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.command-button {
+  min-height: 52px;
+  padding: 8px 10px;
+  text-align: left;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #111d2a;
+}
+
+.command-button b,
+.command-button small {
+  display: block;
+}
+
+.command-button small {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: .54rem;
+}
+
+.save-layout {
+  display: grid;
+  grid-template-columns: minmax(220px, .72fr) minmax(0, 1.28fr);
+  gap: 10px;
+}
+
+.save-slots {
+  display: grid;
+  gap: 7px;
+}
+
+.save-slot {
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #101b28;
+}
+
+.save-slot h4,
+.save-slot p {
+  margin: 0;
+}
+
+.save-slot p {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: .55rem;
+}
+
+.recovery-banner {
+  display: none;
+  margin-bottom: 10px;
+  padding: 10px;
+  border: 1px solid rgba(255, 154, 88, .5);
+  border-radius: 13px;
+  background: rgba(255, 154, 88, .08);
+}
+
+.recovery-banner.show {
+  display: block;
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.toggle-row {
+  min-height: 48px;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #101b28;
+}
+
+.toggle-row input {
+  width: 26px;
+  min-height: 26px;
+}
+
+.binding-list {
+  display: grid;
+  gap: 7px;
+}
+
+.binding-row {
+  padding: 8px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 100px auto;
+  gap: 8px;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #101b28;
+}
+
+.binding-row kbd {
+  padding: 7px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  color: var(--gold-2);
+  background: #071019;
+  text-align: center;
+}
+
+.audio-meter {
+  height: 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+  background: #071019;
+}
+
+.audio-meter span {
+  display: block;
+  width: var(--level);
+  height: 100%;
+  background: linear-gradient(90deg, var(--cyan), var(--gold), var(--red));
+  transition: width .1s linear;
+}
+
+.test-summary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 7px;
+}
+
+.test-stat {
+  padding: 9px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  text-align: center;
+  background: #101b28;
+}
+
+.test-stat strong,
+.test-stat small {
+  display: block;
+}
+
+.test-stat strong {
+  color: var(--gold-2);
+  font-size: 1.1rem;
+}
+
+.test-stat small {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: .53rem;
+}
+
+.test-list {
+  display: grid;
+  gap: 6px;
+  margin-top: 9px;
+}
+
+.test-result {
+  padding: 8px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: #0b151f;
+  font-size: .61rem;
+}
+
+.test-result.pass { color: var(--green); }
+.test-result.fail { color: var(--red); }
+.test-result.pending { color: var(--muted); }
+
+.profiler-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 7px;
+}
+
+.profiler-card {
+  padding: 9px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #101b28;
+}
+
+.profiler-card strong,
+.profiler-card small {
+  display: block;
+}
+
+.profiler-card strong {
+  color: var(--cyan);
+  font-size: 1rem;
+}
+
+.profiler-card small {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: .53rem;
+}
+
+.profiler-canvas {
+  height: 210px;
+  margin-top: 9px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  background: #071019;
+}
+
+.profiler-canvas canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.source-layout {
+  display: grid;
+  grid-template-columns: minmax(230px, .65fr) minmax(0, 1.35fr);
+  gap: 10px;
+}
+
+.source-list {
+  display: grid;
+  gap: 6px;
+}
+
+.source-choice {
+  min-height: 48px;
+  padding: 8px 10px;
+  text-align: left;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: #101b28;
+}
+
+.source-choice.active {
+  border-color: var(--gold-2);
+}
+
+.source-viewer {
+  min-height: 420px;
+  margin: 0;
+  padding: 12px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #061019;
+  color: #bfd0df;
+  font: 600 .59rem / 1.52 ui-monospace, SFMono-Regular, Menlo, monospace;
+  white-space: pre;
+}
+
+.debug-output {
+  max-height: 400px;
+  margin: 0;
+  padding: 10px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: #071019;
+  color: #b7c7d6;
+  font: 600 .57rem / 1.52 ui-monospace, SFMono-Regular, Menlo, monospace;
+  white-space: pre-wrap;
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(92px + var(--safe-bottom));
+  z-index: 120;
+  max-width: min(420px, calc(100% - 24px));
+  padding: 10px 13px;
+  border: 1px solid var(--line-strong);
+  border-radius: 13px;
+  background: rgba(8, 13, 20, .96);
+  box-shadow: 0 18px 38px rgba(0, 0, 0, .35);
+  opacity: 0;
+  transform: translate(-50%, 12px);
+  pointer-events: none;
+  transition: opacity .18s ease, transform .18s ease;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.screen-flash {
+  position: fixed;
+  inset: 0;
+  z-index: 110;
+  pointer-events: none;
+  background: var(--flash-color, white);
+  opacity: 0;
+}
+
+.screen-flash.active {
+  animation: screen-flash calc(.32s * max(var(--motion-scale), .01)) ease;
+}
+
+@keyframes screen-flash {
+  0% { opacity: 0; }
+  18% { opacity: var(--flash-opacity); }
+  100% { opacity: 0; }
+}
+
+.bottom-nav {
+  position: fixed;
+  left: 50%;
+  bottom: calc(9px + var(--safe-bottom));
+  z-index: 80;
+  width: min(640px, calc(100% - 18px));
+  padding: 6px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
+  transform: translateX(-50%);
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: 18px;
+  background: rgba(8, 13, 20, .94);
+  backdrop-filter: blur(18px);
+}
+
+.bottom-nav button {
+  min-height: 48px;
+  padding: 6px;
+  border: 0;
+  border-radius: 12px;
+  color: var(--muted);
+  background: transparent;
+  font-size: .57rem;
+  font-weight: 900;
+}
+
+.bottom-nav button:active {
+  color: var(--gold-2);
+  background: rgba(241, 199, 91, .08);
+}
+
+@media (max-width: 860px) {
+  .hero-grid,
+  .character-layout,
+  .world-layout,
+  .dialogue-layout,
+  .save-layout,
+  .source-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-visual {
+    min-height: 340px;
+  }
+
+  .exhibit-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .exhibit.wide {
+    grid-column: auto;
+  }
+
+  .chapter-nav {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .topbar {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .brand-copy small {
+    display: none;
+  }
+
+  .hero {
+    padding-top: 34px;
+  }
+
+  .hero h1 {
+    font-size: clamp(3rem, 17vw, 5.3rem);
+  }
+
+  .hero-stat-grid,
+  .character-stat-grid,
+  .test-summary,
+  .profiler-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .inventory-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .inventory-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .settings-grid,
+  .grid-2,
+  .grid-3 {
+    grid-template-columns: 1fr;
+  }
+
+  .binding-row {
+    grid-template-columns: minmax(0, 1fr) 90px;
+  }
+
+  .binding-row button {
+    grid-column: 1 / -1;
+  }
+
+  .battlefield {
+    min-height: 390px;
+  }
+
+  .combatant {
+    width: 74px;
+  }
+
+  .source-viewer {
+    min-height: 360px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-scale: 0;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+  }
+}
+</style>
+</head>
+<body>
+<canvas id="ambient-canvas" aria-hidden="true"></canvas>
+<div class="ambient-vignette" aria-hidden="true"></div>
+<div class="screen-flash" id="screen-flash" aria-hidden="true"></div>
+<div class="visually-hidden" id="live-region" role="status" aria-live="polite"></div>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark" aria-hidden="true"></div>
+    <div class="brand-copy">
+      <strong>FORGE RPG STUDIO</strong>
+      <small>MILESTONE 5 · PRODUCTION HARDENING</small>
+    </div>
+  </div>
+  <div class="top-actions">
+    <button class="icon-button" id="quick-save" aria-label="Quick save">◆</button>
+    <button class="icon-button" id="open-settings" aria-label="Open accessibility settings">⚙</button>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="hero-grid">
+    <div>
+      <p class="kicker">FINAL FOUNDATION MILESTONE</p>
+      <h1>PRODUCTION <span>FORGE</span></h1>
+      <p class="hero-lede">A playable RPG systems showroom hardened with recovery saves, accessibility controls, input remapping, procedural audio, deterministic tests, adaptive performance, and exact component export.</p>
+      <div class="hero-actions">
+        <button class="primary-button" data-jump="playable">Enter playable systems</button>
+        <button class="secondary-button" data-jump="production">Open production console</button>
+        <button class="secondary-button" id="run-smoke-tests">Run smoke tests</button>
+      </div>
+      <div class="hero-stat-grid">
+        <div class="hero-stat"><strong id="hero-version">7</strong><small>SCHEMA VERSION</small></div>
+        <div class="hero-stat"><strong id="hero-tests">0/0</strong><small>TESTS PASSING</small></div>
+        <div class="hero-stat"><strong id="hero-fps">60</strong><small>LIVE FPS</small></div>
+        <div class="hero-stat"><strong id="hero-save">READY</strong><small>RECOVERY STATE</small></div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="production-orbit" aria-hidden="true">
+        <div class="production-core">
+          <svg viewBox="0 0 100 100" role="img" aria-label="Production kernel icon">
+            <path d="M18 58L50 12l32 46-32 30z" fill="none" stroke="var(--gold)" stroke-width="4"/>
+            <circle cx="50" cy="50" r="12" fill="var(--cyan)" opacity=".75"/>
+            <path d="M50 23v15M50 62v15M23 50h15M62 50h15" stroke="var(--gold-2)" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="orbit-chip">AUTOSAVE</div>
+        <div class="orbit-chip">TESTS</div>
+        <div class="orbit-chip">ACCESS</div>
+        <div class="orbit-chip">PROFILER</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<nav class="chapter-nav" aria-label="Showroom chapters">
+  <button data-jump="playable"><b>PLAYABLE CORE</b><small>Character, world, narrative</small></button>
+  <button data-jump="combat"><b>COMBAT LOOP</b><small>Formation and targets</small></button>
+  <button data-jump="production"><b>PRODUCTION</b><small>Save, access, input, audio</small></button>
+  <button data-jump="verification"><b>VERIFICATION</b><small>Tests, profiler, export</small></button>
+</nav>
+
+<main>
+<section class="chapter" id="playable">
+  <div class="chapter-head">
+    <h2>Playable RPG Core</h2>
+    <p>The original proof-of-concept remains visible and interactive. Every action now flows through the hardened state, event, save, settings, test, and telemetry layers.</p>
+  </div>
+  <div class="exhibit-grid">
+    <article class="exhibit">
+      <header class="exhibit-head">
+        <span class="exhibit-num">01</span>
+        <div><h3>Character & Resource Runtime</h3><p>Seeded identity, vector equipment layers, derived statistics, unified resources, and accessibility-aware presentation.</p></div>
+      </header>
+      <div class="exhibit-body character-layout">
+        <div class="character-stage">
+          <svg id="character-svg" viewBox="0 0 240 390" role="img" aria-label="Generated RPG hero">
+            <defs>
+              <linearGradient id="armor-gradient" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8ba8bd"/><stop offset="1" stop-color="#32495c"/></linearGradient>
+              <linearGradient id="cape-gradient" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7e3650"/><stop offset="1" stop-color="#2b1525"/></linearGradient>
+            </defs>
+            <g id="doll-cape"><path d="M91 104Q52 154 59 319l61 49 61-49q7-165-32-215z" fill="url(#cape-gradient)" opacity=".92"/></g>
+            <g id="doll-legs"><path d="M91 239l-13 107h31l11-91 11 91h31l-13-107z" fill="#263747"/><path d="M74 342h38v24H66q-5-14 8-24zm54 0h38q13 10 8 24h-46z" fill="#151d27"/></g>
+            <g id="doll-body"><path d="M84 107q36-24 72 0l16 123q-52 25-104 0z" fill="url(#armor-gradient)" stroke="#bcd1df" stroke-width="2"/><path d="M94 115h52l8 34-34 22-34-22z" fill="#506f82"/><path d="M120 119l8 17-8 17-8-17z" fill="var(--gold)"/></g>
+            <g id="doll-arms"><path d="M85 117Q55 127 46 207l24 6 34-77z" fill="url(#armor-gradient)"/><path d="M155 117q30 10 39 90l-24 6-34-77z" fill="url(#armor-gradient)"/><circle cx="55" cy="216" r="14" fill="#d19a78"/><circle cx="185" cy="216" r="14" fill="#d19a78"/></g>
+            <g id="doll-head"><ellipse cx="120" cy="77" rx="39" ry="45" fill="#d19a78"/><path d="M82 72q4-55 38-54 37-1 40 54-12-20-40-22-25 2-38 22z" fill="#2d2429"/><path d="M89 50q31-37 63 3-29-14-63-3z" fill="#4b3740"/><circle cx="106" cy="79" r="3" fill="#1a2330"/><circle cx="134" cy="79" r="3" fill="#1a2330"/><path d="M108 98q12 7 24 0" fill="none" stroke="#7e4e49" stroke-width="3" stroke-linecap="round"/></g>
+            <g id="doll-helmet" opacity="0"><path d="M80 71q3-58 40-59 39 2 41 59l-15-14-26-6-26 6z" fill="#536d7d" stroke="#c0d3df" stroke-width="2"/></g>
+            <g id="doll-shield"><path d="M35 173q31-22 54 0l-5 76q-25 31-49 0z" fill="#3f5666" stroke="var(--gold)" stroke-width="4"/><circle cx="61" cy="205" r="13" fill="var(--gold)" opacity=".7"/></g>
+            <g id="doll-weapon"><path d="M183 126l10 7-61 127-13-7z" fill="#b9d2df"/><path d="M111 242l33 17-7 13-33-17z" fill="var(--gold)"/><path d="M116 254l13 7-20 40-13-7z" fill="#583c2a"/></g>
+          </svg>
+        </div>
+        <div>
+          <div class="grid-2">
+            <label>Character seed<input id="character-seed" value="AVEN-1042"></label>
+            <label>Class<select id="character-class"><option value="warden">Runebound Warden</option><option value="arcanist">Moon Arcanist</option><option value="ranger">Verge Ranger</option></select></label>
+            <label>Skin color<input id="skin-color" type="color" value="#d19a78"></label>
+            <label>Hair color<input id="hair-color" type="color" value="#2d2429"></label>
+          </div>
+          <div class="toolbar" style="margin-top:9px">
+            <button class="mini-button" id="regenerate-character">Regenerate</button>
+            <button class="mini-button" id="cycle-weapon">Cycle weapon</button>
+            <button class="mini-button" id="toggle-helmet">Helmet</button>
+            <button class="mini-button" id="toggle-shield">Shield</button>
+          </div>
+          <div class="character-stat-grid" id="character-stats"></div>
+          <div class="resource-stack" id="resource-stack" style="margin-top:10px"></div>
+          <div class="toolbar" style="margin-top:9px">
+            <button class="mini-button" data-demo="damage">Damage</button>
+            <button class="mini-button" data-demo="cast">Cast</button>
+            <button class="mini-button" data-demo="rest">Rest</button>
+            <button class="mini-button" data-demo="level">Gain XP</button>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="exhibit">
+      <header class="exhibit-head">
+        <span class="exhibit-num">02</span>
+        <div><h3>Inventory & Procedural Equipment</h3><p>Deterministic items, unique instances, slot validation, capacity enforcement, comparison, and equipment-driven character statistics.</p></div>
+      </header>
+      <div class="exhibit-body inventory-layout">
+        <div>
+          <div class="inventory-grid" id="inventory-grid"></div>
+          <div class="toolbar" style="margin-top:9px">
+            <button class="mini-button" id="generate-item">Generate item</button>
+            <button class="mini-button" id="sort-inventory">Sort</button>
+            <span class="chip" id="inventory-capacity"></span>
+          </div>
+        </div>
+        <div class="panel" id="item-detail"></div>
+      </div>
+    </article>
+
+    <article class="exhibit wide">
+      <header class="exhibit-head">
+        <span class="exhibit-num">03</span>
+        <div><h3>Seeded World & Dynamic First-Person Compositor</h3><p>Six natural terrains, centered overview camera, absolute compass movement, fog, stamina costs, and close/distant vector-layer assembly.</p></div>
+      </header>
+      <div class="exhibit-body">
+        <div class="world-layout">
+          <div>
+            <div class="map-stage" id="map-stage">
+              <canvas id="world-map" aria-label="Overhead world map"></canvas>
+              <div class="map-overlay"><span class="chip" id="world-position"></span><span class="chip" id="world-terrain"></span><span class="chip" id="world-seed-label"></span></div>
+            </div>
+            <div class="dpad" aria-label="Compass movement">
+              <button data-move="north" aria-label="Move north">↑</button>
+              <button data-move="west" aria-label="Move west">←</button>
+              <button data-move="south" aria-label="Move south">↓</button>
+              <button data-move="east" aria-label="Move east">→</button>
+            </div>
+          </div>
+          <div>
+            <div class="first-person-stage" id="first-person-stage">
+              <canvas id="first-person-view" aria-label="First person terrain view"></canvas>
+              <div class="compass" id="facing-indicator">N</div>
+              <div class="map-overlay"><span class="chip" id="current-layer"></span><span class="chip" id="distant-layer"></span></div>
+            </div>
+            <div class="grid-2" style="margin-top:9px">
+              <label>World seed<input id="world-seed" value="EMBER-7451"></label>
+              <label>Quality<select id="world-quality"><option value="auto">Adaptive</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></label>
+            </div>
+            <div class="toolbar" style="margin-top:9px"><button class="mini-button" id="generate-world">Regenerate world</button><button class="mini-button" id="gather-terrain">Gather</button></div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="exhibit wide">
+      <header class="exhibit-head">
+        <span class="exhibit-num">04</span>
+        <div><h3>Dialogue, Quest & Event Pipeline</h3><p>Serializable conversation nodes, conditions, effects, event-driven objectives, faction state, and autosave-triggered narrative mutations.</p></div>
+      </header>
+      <div class="exhibit-body dialogue-layout">
+        <div class="portrait-card" id="npc-card"></div>
+        <div>
+          <div class="dialogue-box" id="dialogue-box"></div>
+          <div class="panel" style="margin-top:9px" id="quest-panel"></div>
+        </div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section class="chapter" id="combat">
+  <div class="chapter-head">
+    <h2>Connected Combat Loop</h2>
+    <p>Formation placement, player-selected allies and enemies, actor-specific commands, executable enemy intent, shared status rules, and deterministic battle replay.</p>
+  </div>
+  <div class="exhibit-grid">
+    <article class="exhibit wide">
+      <header class="exhibit-head">
+        <span class="exhibit-num">05</span>
+        <div><h3>Tactical Formation Combat</h3><p>Heroes occupy the left formation, enemies occupy the right, and command targeting is resolved directly through accessible battlefield entities.</p></div>
+      </header>
+      <div class="exhibit-body">
+        <div class="battlefield" id="battlefield" aria-label="Turn based RPG battlefield"></div>
+        <div class="turn-order" id="turn-order"></div>
+        <div class="grid-2" style="margin-top:9px">
+          <div class="panel">
+            <div class="toolbar"><span class="chip" id="combat-round"></span><span class="chip" id="active-actor"></span><span class="chip" id="target-mode"></span></div>
+            <div class="command-grid" id="command-grid" style="margin-top:9px"></div>
+            <button class="mini-button" id="cancel-target" style="margin-top:8px">Cancel target</button>
+          </div>
+          <div class="panel">
+            <div class="toolbar"><button class="mini-button" id="reset-combat">Reset encounter</button><button class="mini-button" id="auto-turn">Auto player turn</button><span class="chip" id="combat-seed-label"></span></div>
+            <pre class="debug-output" id="combat-log" style="margin-top:9px;max-height:190px"></pre>
+          </div>
+        </div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section class="chapter" id="production">
+  <div class="chapter-head">
+    <h2>Production Hardening</h2>
+    <p>These systems make the showroom resilient enough to serve as a genuine foundation for future RPG feature development.</p>
+  </div>
+  <div class="exhibit-grid">
+    <article class="exhibit">
+      <header class="exhibit-head">
+        <span class="exhibit-num">06</span>
+        <div><h3>Autosave, Checkpoint & Recovery</h3><p>Transactional writes, rolling recovery snapshots, checksum validation, migrations, manual slots, and crash-resume prompts.</p></div>
+      </header>
+      <div class="exhibit-body">
+        <div class="recovery-banner" id="recovery-banner">
+          <strong>Recovery snapshot available</strong>
+          <p class="tiny muted" id="recovery-copy"></p>
+          <div class="toolbar"><button class="mini-button" id="restore-recovery">Restore</button><button class="mini-button" id="dismiss-recovery">Dismiss</button></div>
+        </div>
+        <div class="save-slots" id="save-slots"></div>
+        <div class="toolbar" style="margin-top:9px"><button class="mini-button" id="create-checkpoint">Create checkpoint</button><button class="mini-button" id="simulate-crash">Simulate recovery</button><span class="chip" id="autosave-status"></span></div>
+      </div>
+    </article>
+
+    <article class="exhibit">
+      <header class="exhibit-head">
+        <span class="exhibit-num">07</span>
+        <div><h3>Accessibility & Display Console</h3><p>Persistent text scaling, contrast, motion, flash, color-vision palettes, haptics, captions, and announcements.</p></div>
+      </header>
+      <div class="exhibit-body">
+        <div class="settings-grid">
+          <label>Text scale <output id="font-scale-output">100%</output><input id="font-scale" type="range" min="85" max="140" value="100"></label>
+          <label>Color palette<select id="color-palette"><option value="default">Default</option><option value="deuteranopia">Deuteranopia</option><option value="protanopia">Protanopia</option><option value="tritanopia">Tritanopia</option></select></label>
+          <div class="toggle-row"><span>High contrast</span><input id="high-contrast" type="checkbox"></div>
+          <div class="toggle-row"><span>Reduced motion</span><input id="reduced-motion" type="checkbox"></div>
+          <div class="toggle-row"><span>Reduced flashes</span><input id="reduced-flashes" type="checkbox"></div>
+          <div class="toggle-row"><span>Haptic feedback</span><input id="haptics-enabled" type="checkbox" checked></div>
+          <div class="toggle-row"><span>Audio captions</span><input id="captions-enabled" type="checkbox" checked></div>
+          <div class="toggle-row"><span>Verbose announcements</span><input id="announcements-enabled" type="checkbox" checked></div>
+        </div>
+        <div class="toolbar" style="margin-top:9px"><button class="mini-button" id="announce-test">Test announcement</button><button class="mini-button" id="flash-test">Test safe flash</button><button class="mini-button" id="reset-accessibility">Reset</button></div>
+      </div>
+    </article>
+
+    <article class="exhibit">
+      <header class="exhibit-head">
+        <span class="exhibit-num">08</span>
+        <div><h3>Input Mapping & Touch Actions</h3><p>Keyboard remapping, duplicate-binding validation, touch action registry, and one event path shared by physical and on-screen controls.</p></div>
+      </header>
+      <div class="exhibit-body">
+        <div class="binding-list" id="binding-list"></div>
+        <div class="toolbar" style="margin-top:9px"><button class="mini-button" id="reset-bindings">Reset bindings</button><span class="chip" id="binding-status"></span></div>
+        <p class="tiny muted" id="binding-help">Choose Rebind, then press a key. Arrow keys remain available for map movement unless explicitly reassigned.</p>
+      </div>
+    </article>
+
+    <article class="exhibit">
+      <header class="exhibit-head">
+        <span class="exhibit-num">09</span>
+        <div><h3>Procedural Audio & Mixer</h3><p>iOS-safe AudioContext activation, master and category buses, synthesized cues, mute persistence, captions, and concurrency control.</p></div>
+      </header>
+      <div class="exhibit-body">
+        <div class="grid-2">
+          <label>Master <output id="master-output">80%</output><input id="master-volume" type="range" min="0" max="100" value="80"></label>
+          <label>Music <output id="music-output">35%</output><input id="music-volume" type="range" min="0" max="100" value="35"></label>
+          <label>Effects <output id="sfx-output">80%</output><input id="sfx-volume" type="range" min="0" max="100" value="80"></label>
+          <label>Interface <output id="ui-output">65%</output><input id="ui-volume" type="range" min="0" max="100" value="65"></label>
+        </div>
+        <div class="audio-meter" style="margin-top:10px"><span id="audio-level" style="--level:0%"></span></div>
+        <div class="toolbar" style="margin-top:9px"><button class="mini-button" data-sound="ui">Interface</button><button class="mini-button" data-sound="attack">Attack</button><button class="mini-button" data-sound="heal">Heal</button><button class="mini-button" data-sound="victory">Victory</button><button class="mini-button" id="toggle-mute">Mute</button></div>
+        <p class="tiny muted" id="audio-caption">Audio captions appear here.</p>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section class="chapter" id="verification">
+  <div class="chapter-head">
+    <h2>Verification & Delivery</h2>
+    <p>Repeatable tests, live mobile performance instrumentation, adaptive quality, and source packages generated from the same component registry as the showroom.</p>
+  </div>
+  <div class="exhibit-grid">
+    <article class="exhibit">
+      <header class="exhibit-head">
+        <span class="exhibit-num">10</span>
+        <div><h3>Deterministic Test Harness</h3><p>World, loot, save, migration, combat, quest, input, and registry tests run against isolated cloned state.</p></div>
+      </header>
+      <div class="exhibit-body">
+        <div class="test-summary">
+          <div class="test-stat"><strong id="test-total">0</strong><small>TOTAL</small></div>
+          <div class="test-stat"><strong id="test-pass">0</strong><small>PASS</small></div>
+          <div class="test-stat"><strong id="test-fail">0</strong><small>FAIL</small></div>
+          <div class="test-stat"><strong id="test-time">0ms</strong><small>TIME</small></div>
+        </div>
+        <div class="toolbar" style="margin-top:9px"><button class="primary-button" id="run-all-tests">Run all tests</button><button class="mini-button" id="run-combat-test">Combat only</button><button class="mini-button" id="run-save-test">Save only</button></div>
+        <div class="test-list" id="test-list"></div>
+      </div>
+    </article>
+
+    <article class="exhibit">
+      <header class="exhibit-head">
+        <span class="exhibit-num">11</span>
+        <div><h3>Mobile Performance Profiler</h3><p>Rolling FPS, frame cost, memory estimates, render counts, long-frame warnings, and automatic quality scaling.</p></div>
+      </header>
+      <div class="exhibit-body">
+        <div class="profiler-grid">
+          <div class="profiler-card"><strong id="profiler-fps">60</strong><small>FPS</small></div>
+          <div class="profiler-card"><strong id="profiler-frame">16.7</strong><small>FRAME MS</small></div>
+          <div class="profiler-card"><strong id="profiler-renders">0</strong><small>RENDERS</small></div>
+          <div class="profiler-card"><strong id="profiler-quality">HIGH</strong><small>QUALITY</small></div>
+        </div>
+        <div class="profiler-canvas"><canvas id="profiler-canvas" aria-label="Performance history chart"></canvas></div>
+        <div class="toolbar" style="margin-top:9px"><button class="mini-button" id="toggle-adaptive-quality">Adaptive: On</button><button class="mini-button" id="stress-test">Run stress pulse</button><span class="chip" id="long-frame-count">0 long frames</span></div>
+      </div>
+    </article>
+
+    <article class="exhibit wide">
+      <header class="exhibit-head">
+        <span class="exhibit-num">12</span>
+        <div><h3>Exact Component Source Exporter</h3><p>Export packages are generated from the same registered mount, render, state, style, and behavior definitions used by the live showroom.</p></div>
+      </header>
+      <div class="exhibit-body source-layout">
+        <div>
+          <div class="source-list" id="source-list"></div>
+          <div class="toolbar" style="margin-top:9px"><button class="mini-button" id="copy-source">Copy package</button><button class="mini-button" id="download-source">Download HTML</button></div>
+          <p class="tiny muted" id="source-description"></p>
+        </div>
+        <pre class="source-viewer" id="source-viewer"></pre>
+      </div>
+    </article>
+
+    <article class="exhibit wide">
+      <header class="exhibit-head">
+        <span class="exhibit-num">13</span>
+        <div><h3>Versioned State Inspector</h3><p>Current authoritative state, recent commands, autosave metadata, settings, tests, profiler readings, and recovery health.</p></div>
+      </header>
+      <div class="exhibit-body"><pre class="debug-output" id="state-inspector"></pre></div>
+    </article>
+  </div>
+</section>
+</main>
+
+<nav class="bottom-nav" aria-label="Mobile chapters">
+  <button data-jump="playable">PLAYABLE</button>
+  <button data-jump="combat">COMBAT</button>
+  <button data-jump="production">PRODUCTION</button>
+  <button data-jump="verification">VERIFY</button>
+</nav>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+"use strict";
+
+/* ========================================================================== */
+/* UTILITIES                                                                  */
+/* ========================================================================== */
+
+const $ = selector => document.querySelector(selector);
+const $$ = selector => [...document.querySelectorAll(selector)];
+const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+const lerp = (a, b, t) => a + (b - a) * t;
+const clone = value => typeof structuredClone === "function" ? structuredClone(value) : JSON.parse(JSON.stringify(value));
+const nowIso = () => new Date().toISOString();
+const sleep = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>'"]/g, character => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    "'": "&#39;",
+    '"': "&quot;"
+  })[character]);
+}
+
+function hashString(value) {
+  let hash = 2166136261;
+  for (const character of String(value)) {
+    hash ^= character.charCodeAt(0);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+function seededRandom(seed) {
+  return function random() {
+    let value = seed += 0x6D2B79F5;
+    value = Math.imul(value ^ value >>> 15, value | 1);
+    value ^= value + Math.imul(value ^ value >>> 7, value | 61);
+    return ((value ^ value >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+function choose(list, random = Math.random) {
+  return list[Math.floor(random() * list.length)];
+}
+
+function titleCase(value) {
+  return String(value).replace(/[-_]/g, " ").replace(/\b\w/g, character => character.toUpperCase());
+}
+
+function checksum(value) {
+  return hashString(JSON.stringify(value)).toString(16).padStart(8, "0");
+}
+
+function safeJsonParse(value, fallback = null) {
+  try {
+    return JSON.parse(value);
+  } catch (_error) {
+    return fallback;
+  }
+}
+
+let toastTimer = 0;
+
+function showToast(message) {
+  const element = $("#toast");
+  element.textContent = message;
+  element.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => element.classList.remove("show"), 1900);
+}
+
+function announce(message, force = false) {
+  if (!force && !state.settings.announcements) return;
+  const region = $("#live-region");
+  region.textContent = "";
+  requestAnimationFrame(() => { region.textContent = message; });
+}
+
+function haptic(pattern) {
+  if (!state.settings.haptics) return;
+  try { navigator.vibrate?.(pattern); } catch (_error) {}
+}
+
+function flashScreen(color = "white") {
+  const element = $("#screen-flash");
+  element.style.setProperty("--flash-color", color);
+  element.classList.remove("active");
+  void element.offsetWidth;
+  element.classList.add("active");
+}
+
+function downloadText(filename, content, mime = "text/plain") {
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+async function copyText(content) {
+  try {
+    await navigator.clipboard.writeText(content);
+    showToast("Copied to clipboard");
+  } catch (_error) {
+    const textarea = document.createElement("textarea");
+    textarea.value = content;
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand("copy");
+    textarea.remove();
+    showToast("Copied with fallback");
+  }
+}
+
+/* ========================================================================== */
+/* CONTENT REGISTRIES                                                         */
+/* ========================================================================== */
+
+const SCHEMA_VERSION = 7;
+
+const TERRAIN = {
+  grass: { id: 0, key: "grass", name: "Grass", color: "#456f48", walkable: true, cost: 1, gather: "moon-herb" },
+  forest: { id: 1, key: "forest", name: "Forest", color: "#557c55", walkable: true, cost: 2, gather: "moon-herb" },
+  mountain: { id: 2, key: "mountain", name: "Mountain", color: "#5c6e7d", walkable: true, cost: 4, gather: "iron-ore" },
+  lake: { id: 3, key: "lake", name: "Lake", color: "#1d586f", walkable: false, cost: 99, gather: null },
+  swamp: { id: 4, key: "swamp", name: "Swamp", color: "#42634e", walkable: true, cost: 3, gather: "moon-herb" },
+  desert: { id: 5, key: "desert", name: "Desert", color: "#b88b50", walkable: true, cost: 3, gather: "arc-gem" }
+};
+
+const TERRAIN_BY_ID = Object.fromEntries(Object.values(TERRAIN).map(entry => [entry.id, entry]));
+const TERRAIN_KEYS = Object.keys(TERRAIN);
+
+const TERRAIN_PALETTES = {
+  forest: { skyTop: "#304955", skyBottom: "#9bad8d", horizon: "#28503a", ground: "#1d3828", accent: "#6ca266", mist: "#c0d0bc" },
+  lake: { skyTop: "#456b80", skyBottom: "#aecdd2", horizon: "#3c8196", ground: "#174c63", accent: "#b8ecf2", mist: "#e0f0f1" },
+  grass: { skyTop: "#567f95", skyBottom: "#d4cda0", horizon: "#648758", ground: "#3f683d", accent: "#d5d178", mist: "#e9e0bd" },
+  swamp: { skyTop: "#394b4d", skyBottom: "#8f9d7c", horizon: "#415a48", ground: "#243c33", accent: "#9bae6d", mist: "#bec59f" },
+  desert: { skyTop: "#668ca4", skyBottom: "#f0c47f", horizon: "#be8652", ground: "#9f6d42", accent: "#f8d28e", mist: "#f6d6a0" },
+  mountain: { skyTop: "#425b70", skyBottom: "#bac7c9", horizon: "#526575", ground: "#34434f", accent: "#dfe8e6", mist: "#dbe1df" }
+};
+
+const CLASSES = {
+  warden: { name: "Runebound Warden", base: { might: 14, finesse: 9, intellect: 8, resolve: 15 }, abilities: ["strike", "guard", "tonic", "runeCleave"] },
+  arcanist: { name: "Moon Arcanist", base: { might: 7, finesse: 10, intellect: 17, resolve: 10 }, abilities: ["strike", "guard", "tonic", "arcLance", "mend"] },
+  ranger: { name: "Verge Ranger", base: { might: 10, finesse: 16, intellect: 9, resolve: 10 }, abilities: ["strike", "guard", "tonic", "volley"] }
+};
+
+const ITEM_BASES = [
+  { type: "sword", noun: "Blade", slot: "weapon", stats: ["power", "speed"] },
+  { type: "staff", noun: "Staff", slot: "weapon", stats: ["magic", "defense"] },
+  { type: "bow", noun: "Bow", slot: "weapon", stats: ["power", "speed"] },
+  { type: "shield", noun: "Shield", slot: "offhand", stats: ["defense", "health"] },
+  { type: "helm", noun: "Helm", slot: "helmet", stats: ["defense", "magic"] },
+  { type: "armor", noun: "Plate", slot: "armor", stats: ["defense", "health"] },
+  { type: "ring", noun: "Ring", slot: "ring", stats: ["magic", "speed"] },
+  { type: "cloak", noun: "Cloak", slot: "cloak", stats: ["speed", "defense"] }
+];
+
+const ITEM_PREFIXES = ["Ashen", "Moonlit", "Runebound", "Hollow", "Starforged", "Gilded", "Stormwake", "Cinderborn"];
+const ITEM_SUFFIXES = ["of the Verge", "of Embers", "of Returning", "of Deep Hours", "of the Warden", "of Glass", "of Quiet Thunder"];
+const RARITY_COLORS = { common: "#9ba8b5", uncommon: "#63dfa0", rare: "#65dcec", epic: "#b38dff", legendary: "#f1c75b" };
+
+const ABILITIES = {
+  strike: { id: "strike", name: "Strike", target: "enemy", cost: 0, resource: null, description: "Reliable physical attack." },
+  guard: { id: "guard", name: "Guard", target: "self", cost: 0, resource: null, description: "Gain guard until struck." },
+  tonic: { id: "tonic", name: "Health Tonic", target: "ally", cost: 1, resource: "item", description: "Consume one tonic to heal an ally." },
+  runeCleave: { id: "runeCleave", name: "Rune Cleave", target: "enemy", cost: 12, resource: "mana", description: "Heavy attack with splash damage." },
+  arcLance: { id: "arcLance", name: "Arc Lance", target: "enemy", cost: 14, resource: "mana", description: "Arcane damage and Hexed." },
+  mend: { id: "mend", name: "Mend", target: "ally", cost: 12, resource: "mana", description: "Restore an ally." },
+  volley: { id: "volley", name: "Volley", target: "all-enemies", cost: 15, resource: "mana", description: "Damage every enemy." },
+  shieldBash: { id: "shieldBash", name: "Shield Bash", target: "enemy", cost: 8, resource: "mana", description: "Defense-scaled damage and stun." },
+  provoke: { id: "provoke", name: "Provoke", target: "enemy", cost: 6, resource: "mana", description: "Damage and protect adjacent allies." },
+  cinderLunge: { id: "cinderLunge", name: "Cinder Lunge", target: "enemy", cost: 0, resource: null, description: "Enemy physical attack." },
+  hexBolt: { id: "hexBolt", name: "Hex Bolt", target: "enemy", cost: 8, resource: "mana", description: "Enemy arcane attack." }
+};
+
+const NPC = {
+  id: "serin",
+  name: "Gatekeeper Serin",
+  role: "Warden of Whispering Verge",
+  faction: "Valley Wardens",
+  palette: { skin: "#be8669", hair: "#3c2d31", cloth: "#49677a", accent: "#f1c75b" }
+};
+
+const DIALOGUE = {
+  start: {
+    line: "The Verge gate remembers every traveler. State your purpose, Runebound.",
+    choices: [
+      { text: "Ask about Moonfen Shrine.", to: "moonfen", effects: [{ type: "flag", key: "moonfenKnown", value: true }] },
+      { text: "Offer help to the wardens.", to: "quest", effects: [{ type: "quest", id: "moonfen" }] },
+      { text: "End conversation.", to: "end", effects: [] }
+    ]
+  },
+  moonfen: {
+    line: "Moonfen lies east beyond the marsh. Recover the relic and the valley will remember your name.",
+    choices: [
+      { text: "Accept the task.", to: "quest", effects: [{ type: "quest", id: "moonfen" }] },
+      { text: "Return.", to: "start", effects: [] }
+    ]
+  },
+  quest: {
+    line: "Then find the shrine, recover its relic, and return alive.",
+    choices: [
+      { text: "I will return with it.", to: "end", effects: [{ type: "reputation", amount: 3 }] }
+    ]
+  },
+  end: {
+    line: "Serin steps aside. The roadless wild waits beyond the gate.",
+    choices: [
+      { text: "Restart conversation.", to: "start", effects: [] }
+    ]
+  }
+};
+
+const QUESTS = {
+  moonfen: {
+    id: "moonfen",
+    title: "Echoes of Moonfen",
+    description: "Reach the shrine, gather an Arc Gem, and defeat a hostile encounter.",
+    objectives: [
+      { id: "travel", label: "Travel 5 world steps", event: "WORLD_TILE_ENTERED", target: 5 },
+      { id: "gather", label: "Gather an Arc Gem", event: "ITEM_GAINED", where: { definitionId: "arc-gem" }, target: 1 },
+      { id: "battle", label: "Win one encounter", event: "COMBAT_VICTORY", target: 1 }
+    ],
+    rewards: { xp: 180, gold: 90, reputation: 12 }
+  }
+};
+
+const DEFAULT_BINDINGS = {
+  moveNorth: "ArrowUp",
+  moveSouth: "ArrowDown",
+  moveWest: "ArrowLeft",
+  moveEast: "ArrowRight",
+  quickSave: "KeyQ",
+  openInventory: "KeyI",
+  confirm: "Enter",
+  cancel: "Escape"
+};
+
+/* ========================================================================== */
+/* AUTHORITATIVE STATE                                                        */
+/* ========================================================================== */
+
+function createInitialState() {
+  return {
+    version: SCHEMA_VERSION,
+    meta: {
+      build: "milestone-5",
+      createdAt: nowIso(),
+      updatedAt: nowIso(),
+      uid: 0,
+      commandCount: 0,
+      renderCount: 0
+    },
+    character: {
+      seed: "AVEN-1042",
+      name: "Aven Vale",
+      classId: "warden",
+      level: 4,
+      xp: 36,
+      skin: "#d19a78",
+      hair: "#2d2429",
+      weaponVisual: "sword",
+      helmetVisible: false,
+      shieldVisible: true,
+      attributes: clone(CLASSES.warden.base),
+      resources: {
+        health: { current: 112, baseMax: 120 },
+        mana: { current: 52, baseMax: 70 },
+        stamina: { current: 86, baseMax: 100 }
+      },
+      equipment: {
+        weapon: null,
+        offhand: null,
+        helmet: null,
+        armor: null,
+        ring: null,
+        cloak: null
+      },
+      statuses: []
+    },
+    inventory: {
+      capacity: 20,
+      items: []
+    },
+    world: {
+      seed: "EMBER-7451",
+      width: 36,
+      height: 28,
+      tiles: [],
+      visible: [],
+      visited: [],
+      player: { x: 12, y: 9 },
+      facing: "north",
+      steps: 0,
+      discovered: 0
+    },
+    dialogue: {
+      npcId: "serin",
+      node: "start",
+      visited: ["start"],
+      flags: {}
+    },
+    quests: {
+      moonfen: {
+        status: "inactive",
+        pinned: true,
+        progress: { travel: 0, gather: 0, battle: 0 },
+        rewarded: false
+      }
+    },
+    factions: {
+      wardens: 18
+    },
+    party: {
+      members: ["aven", "lyra", "tor"],
+      formation: { aven: 0, lyra: 4, tor: 2 }
+    },
+    combat: {
+      active: false,
+      result: null,
+      seed: 0,
+      round: 1,
+      index: 0,
+      queue: [],
+      pending: null,
+      busy: false,
+      units: [],
+      log: []
+    },
+    settings: {
+      fontScale: 100,
+      contrast: "normal",
+      motion: "full",
+      flashes: "full",
+      palette: "default",
+      haptics: true,
+      captions: true,
+      announcements: true,
+      adaptiveQuality: true,
+      worldQuality: "auto",
+      bindings: clone(DEFAULT_BINDINGS),
+      audio: {
+        master: .8,
+        music: .35,
+        sfx: .8,
+        ui: .65,
+        muted: false
+      }
+    },
+    runtime: {
+      selectedItemId: null,
+      selectedSourceId: "resource-hud",
+      rebindingAction: null,
+      lastAutosaveAt: null,
+      lastCheckpointAt: null,
+      recoveryAvailable: false,
+      autosaveDirty: false,
+      qualityTier: "high",
+      longFrames: 0
+    },
+    telemetry: [],
+    testResults: []
+  };
+}
+
+let state = createInitialState();
+
+function nextUid(prefix = "id") {
+  state.meta.uid += 1;
+  return `${prefix}-${state.meta.uid}-${Date.now().toString(36)}`;
+}
+
+/* ========================================================================== */
+/* EVENT BUS AND COMMAND PIPELINE                                              */
+/* ========================================================================== */
+
+const subscribers = new Set();
+
+function gameEvent(type, payload = {}) {
+  return {
+    id: nextUid("event"),
+    type,
+    payload,
+    timestamp: performance.now()
+  };
+}
+
+function subscribe(listener) {
+  subscribers.add(listener);
+  return () => subscribers.delete(listener);
+}
+
+function publish(event) {
+  state.telemetry.push({
+    type: event.type,
+    payload: clone(event.payload),
+    at: Date.now()
+  });
+  if (state.telemetry.length > 80) state.telemetry.shift();
+  for (const listener of subscribers) listener(event);
+}
+
+function dispatch(type, payload = {}) {
+  const startedAt = performance.now();
+  const events = reduceCommand(type, payload);
+  state.meta.commandCount += 1;
+  state.meta.updatedAt = nowIso();
+  for (const event of events) publish(event);
+  markAutosaveDirty(type);
+  renderAll();
+  profiler.commandTimes.push(performance.now() - startedAt);
+  if (profiler.commandTimes.length > 60) profiler.commandTimes.shift();
+  return events;
+}
+
+function reduceCommand(type, payload) {
+  const events = [];
+  switch (type) {
+    case "SET_CHARACTER_CLASS": {
+      const definition = CLASSES[payload.classId];
+      if (!definition) break;
+      state.character.classId = payload.classId;
+      state.character.attributes = clone(definition.base);
+      events.push(gameEvent("CHARACTER_CLASS_CHANGED", { classId: payload.classId }));
+      break;
+    }
+    case "SET_CHARACTER_COLORS": {
+      if (payload.skin) state.character.skin = payload.skin;
+      if (payload.hair) state.character.hair = payload.hair;
+      events.push(gameEvent("CHARACTER_APPEARANCE_CHANGED", payload));
+      break;
+    }
+    case "CHANGE_RESOURCE": {
+      const resource = state.character.resources[payload.key];
+      if (!resource) break;
+      resource.current = clamp(resource.current + payload.amount, 0, resourceMaximum(payload.key));
+      events.push(gameEvent("RESOURCE_CHANGED", { key: payload.key, amount: payload.amount, value: resource.current }));
+      break;
+    }
+    case "REST_PARTY": {
+      for (const key of Object.keys(state.character.resources)) {
+        state.character.resources[key].current = resourceMaximum(key);
+      }
+      state.character.statuses = [];
+      events.push(gameEvent("PARTY_RESTED"));
+      break;
+    }
+    case "GAIN_XP": {
+      grantXp(payload.amount, events);
+      break;
+    }
+    case "ADD_ITEM": {
+      addItem(payload.item, payload.quantity || 1, events);
+      break;
+    }
+    case "EQUIP_ITEM": {
+      equipItem(payload.instanceId, events);
+      break;
+    }
+    case "SORT_INVENTORY": {
+      state.inventory.items.sort((a, b) => a.type.localeCompare(b.type) || b.value - a.value);
+      events.push(gameEvent("INVENTORY_SORTED"));
+      break;
+    }
+    case "MOVE_WORLD": {
+      moveWorld(payload.dx, payload.dy, events);
+      break;
+    }
+    case "GENERATE_WORLD": {
+      generateWorld(payload.seed || state.world.seed, events);
+      break;
+    }
+    case "GATHER_TERRAIN": {
+      gatherTerrain(events);
+      break;
+    }
+    case "DIALOGUE_CHOICE": {
+      chooseDialogue(payload.index, events);
+      break;
+    }
+    case "START_QUEST": {
+      startQuest(payload.id, events);
+      break;
+    }
+    case "START_COMBAT": {
+      startCombat(payload.seed || hashString(`${state.world.seed}:${state.world.steps}`), events);
+      break;
+    }
+    case "CHOOSE_ABILITY": {
+      chooseAbility(payload.id, events);
+      break;
+    }
+    case "SELECT_TARGET": {
+      selectTarget(payload.id, events);
+      break;
+    }
+    case "CANCEL_TARGET": {
+      state.combat.pending = null;
+      events.push(gameEvent("COMBAT_TARGETING_CANCELLED"));
+      break;
+    }
+    case "SET_SETTING": {
+      setSetting(payload.key, payload.value, events);
+      break;
+    }
+    case "SET_BINDING": {
+      setBinding(payload.action, payload.code, events);
+      break;
+    }
+    case "LOAD_STATE": {
+      state = validateAndMigrate(payload.state);
+      events.push(gameEvent("STATE_LOADED", { source: payload.source || "unknown" }));
+      break;
+    }
+    default:
+      break;
+  }
+  return events;
+}
+
+/* ========================================================================== */
+/* CHARACTER, ITEMS, AND RESOURCES                                             */
+/* ========================================================================== */
+
+function derivedCharacter(sourceState = state) {
+  const attributes = sourceState.character.attributes;
+  const stats = {
+    power: attributes.might * 2.2 + attributes.finesse * .7,
+    defense: attributes.resolve * 2 + sourceState.character.level * 1.4,
+    magic: attributes.intellect * 2.3 + attributes.resolve * .5,
+    speed: 80 + attributes.finesse * 1.6,
+    crit: 5 + attributes.finesse * .3
+  };
+  const maximums = {
+    health: sourceState.character.resources.health.baseMax,
+    mana: sourceState.character.resources.mana.baseMax,
+    stamina: sourceState.character.resources.stamina.baseMax
+  };
+  const equippedIds = Object.values(sourceState.character.equipment).filter(Boolean);
+  const items = equippedIds.map(id => sourceState.inventory.items.find(item => item.instanceId === id)).filter(Boolean);
+  for (const item of items) {
+    for (const effect of item.effects || []) {
+      if (effect.type === "stat") stats[effect.stat] = (stats[effect.stat] || 0) + effect.value;
+      if (effect.type === "maximum") maximums[effect.resource] = (maximums[effect.resource] || 0) + effect.value;
+    }
+  }
+  return {
+    stats: Object.fromEntries(Object.entries(stats).map(([key, value]) => [key, Math.round(value)])),
+    maximums,
+    abilities: [...CLASSES[sourceState.character.classId].abilities]
+  };
+}
+
+function resourceMaximum(key, sourceState = state) {
+  return derivedCharacter(sourceState).maximums[key] || 100;
+}
+
+function grantXp(amount, events) {
+  state.character.xp += amount;
+  events.push(gameEvent("XP_GAINED", { amount }));
+  while (state.character.xp >= 100) {
+    state.character.xp -= 100;
+    state.character.level += 1;
+    events.push(gameEvent("CHARACTER_LEVEL_UP", { level: state.character.level }));
+  }
+}
+
+function addItem(item, quantity, events) {
+  const stackable = ["potion", "herb", "ore", "gem"].includes(item.type);
+  const existing = stackable && state.inventory.items.find(entry => entry.definitionId === item.definitionId);
+  if (!existing && state.inventory.items.length >= state.inventory.capacity) {
+    showToast("Inventory is full");
+    return false;
+  }
+  if (existing) {
+    existing.qty += quantity;
+  } else {
+    state.inventory.items.push({
+      ...clone(item),
+      instanceId: item.instanceId || nextUid("item"),
+      qty: quantity
+    });
+  }
+  events.push(gameEvent("ITEM_GAINED", { definitionId: item.definitionId, amount: quantity }));
+  return true;
+}
+
+function equipItem(instanceId, events) {
+  const item = state.inventory.items.find(entry => entry.instanceId === instanceId);
+  if (!item || !item.slot) return;
+  state.character.equipment[item.slot] = item.instanceId;
+  events.push(gameEvent("ITEM_EQUIPPED", { instanceId, slot: item.slot }));
+  haptic(8);
+}
+
+function generateItem(seed = `${state.world.seed}:${state.meta.uid}`) {
+  const random = seededRandom(hashString(seed));
+  const base = choose(ITEM_BASES, random);
+  const rarityRoll = random() * 100;
+  const rarity = rarityRoll < 38 ? "common" : rarityRoll < 67 ? "uncommon" : rarityRoll < 86 ? "rare" : rarityRoll < 96 ? "epic" : "legendary";
+  const multiplier = { common: 1, uncommon: 1.25, rare: 1.65, epic: 2.2, legendary: 3.1 }[rarity];
+  const stat = choose(base.stats, random);
+  const value = Math.max(2, Math.round((4 + random() * 8) * multiplier));
+  const effect = stat === "health"
+    ? { type: "maximum", resource: "health", value }
+    : { type: "stat", stat, value };
+  return {
+    definitionId: `generated-${hashString(seed).toString(36)}`,
+    type: base.type,
+    slot: base.slot,
+    name: `${choose(ITEM_PREFIXES, random)} ${base.noun} ${choose(ITEM_SUFFIXES, random)}`,
+    rarity,
+    value: Math.round((70 + random() * 120) * multiplier),
+    effects: [effect],
+    palette: {
+      main: rarity === "legendary" ? "#b5892f" : rarity === "epic" ? "#7455a0" : "#486579",
+      highlight: RARITY_COLORS[rarity],
+      gem: choose(["#65dcec", "#b38dff", "#f06773", "#63dfa0"], random)
+    }
+  };
+}
+
+function inventoryCount(definitionId, sourceState = state) {
+  return sourceState.inventory.items.filter(item => item.definitionId === definitionId).reduce((sum, item) => sum + item.qty, 0);
+}
+
+function consumeItem(definitionId, quantity) {
+  for (const item of [...state.inventory.items]) {
+    if (item.definitionId !== definitionId) continue;
+    const used = Math.min(item.qty, quantity);
+    item.qty -= used;
+    quantity -= used;
+    if (item.qty <= 0) state.inventory.items = state.inventory.items.filter(entry => entry !== item);
+    if (quantity <= 0) break;
+  }
+}
+
+/* ========================================================================== */
+/* WORLD GENERATION AND COMPOSITING                                            */
+/* ========================================================================== */
+
+const worldRuntime = {
+  mapCanvas: null,
+  mapContext: null,
+  viewCanvas: null,
+  viewContext: null,
+  mapWidth: 0,
+  mapHeight: 0,
+  viewWidth: 0,
+  viewHeight: 0,
+  mapDpr: 1,
+  viewDpr: 1,
+  tileSize: 28,
+  cameraX: 0,
+  cameraY: 0,
+  time: 0,
+  transition: 0
+};
+
+function worldIndex(x, y, sourceState = state) {
+  return y * sourceState.world.width + x;
+}
+
+function inWorld(x, y, sourceState = state) {
+  return x >= 0 && y >= 0 && x < sourceState.world.width && y < sourceState.world.height;
+}
+
+function terrainAt(x, y, sourceState = state) {
+  if (!inWorld(x, y, sourceState)) return null;
+  return TERRAIN_BY_ID[sourceState.world.tiles[worldIndex(x, y, sourceState)]];
+}
+
+function noise2d(x, y, seed) {
+  let value = Math.imul(x + 374761393, 668265263) ^ Math.imul(y + 1442695041, 2246822519) ^ seed;
+  value = Math.imul(value ^ value >>> 13, 1274126177);
+  return ((value ^ value >>> 16) >>> 0) / 4294967295;
+}
+
+function revealWorld(cx, cy, radius = 3, sourceState = state) {
+  for (let y = cy - radius; y <= cy + radius; y += 1) {
+    for (let x = cx - radius; x <= cx + radius; x += 1) {
+      if (inWorld(x, y, sourceState) && Math.hypot(x - cx, y - cy) <= radius + .35) {
+        sourceState.world.visible[worldIndex(x, y, sourceState)] = 1;
+      }
+    }
+  }
+  sourceState.world.discovered = sourceState.world.visible.reduce((sum, value) => sum + (value ? 1 : 0), 0);
+}
+
+function generateWorld(seed, events = [], targetState = state) {
+  const seedHash = hashString(seed);
+  targetState.world.seed = seed;
+  targetState.world.tiles = Array(targetState.world.width * targetState.world.height);
+  targetState.world.visible = Array(targetState.world.width * targetState.world.height).fill(0);
+  targetState.world.visited = Array(targetState.world.width * targetState.world.height).fill(0);
+  targetState.world.player = { x: 12, y: 9 };
+  targetState.world.facing = "north";
+  targetState.world.steps = 0;
+  for (let y = 0; y < targetState.world.height; y += 1) {
+    for (let x = 0; x < targetState.world.width; x += 1) {
+      const elevation = (noise2d(Math.floor(x / 3), Math.floor(y / 3), seedHash) + noise2d(x, y, seedHash ^ 0x77aa)) / 2;
+      const moisture = (noise2d(x + 20, y - 8, seedHash ^ 0x55aa) + noise2d(Math.floor(x / 4), Math.floor(y / 4), seedHash ^ 0x1199)) / 2;
+      const heat = noise2d(x - 10, y + 17, seedHash ^ 0x9911);
+      let type = "grass";
+      if (elevation < .18) type = "lake";
+      else if (elevation > .82) type = "mountain";
+      else if (moisture > .72) type = "swamp";
+      else if (moisture > .58) type = "forest";
+      else if (moisture < .28 && heat > .48) type = "desert";
+      targetState.world.tiles[worldIndex(x, y, targetState)] = TERRAIN[type].id;
+    }
+  }
+  targetState.world.tiles[worldIndex(12, 9, targetState)] = TERRAIN.grass.id;
+  revealWorld(12, 9, 4, targetState);
+  if (targetState === state) centerMapCamera();
+  events.push(gameEvent("WORLD_GENERATED", { seed }));
+  return targetState;
+}
+
+function centerMapCamera() {
+  worldRuntime.cameraX = state.world.player.x * worldRuntime.tileSize - worldRuntime.mapWidth / 2 + worldRuntime.tileSize / 2;
+  worldRuntime.cameraY = state.world.player.y * worldRuntime.tileSize - worldRuntime.mapHeight / 2 + worldRuntime.tileSize / 2;
+}
+
+function moveWorld(dx, dy, events) {
+  if (state.combat.active && !state.combat.result) {
+    showToast("Resolve combat before traveling");
+    return;
+  }
+  const facing = dx > 0 ? "east" : dx < 0 ? "west" : dy > 0 ? "south" : "north";
+  state.world.facing = facing;
+  const next = { x: state.world.player.x + dx, y: state.world.player.y + dy };
+  const terrain = terrainAt(next.x, next.y);
+  if (!terrain?.walkable) {
+    events.push(gameEvent("WORLD_MOVE_BLOCKED", { ...next, terrain: terrain?.key || "edge" }));
+    showToast(`${terrain?.name || "World edge"} blocks the way`);
+    haptic(25);
+    worldRuntime.transition = .2;
+    return;
+  }
+  const cost = terrain.cost;
+  if (state.character.resources.stamina.current < cost) {
+    showToast(`Need ${cost} stamina`);
+    return;
+  }
+  state.character.resources.stamina.current -= cost;
+  state.world.player = next;
+  state.world.steps += 1;
+  state.world.visited[worldIndex(next.x, next.y)] = 1;
+  revealWorld(next.x, next.y, terrain.key === "mountain" ? 4 : 3);
+  centerMapCamera();
+  worldRuntime.transition = 1;
+  events.push(gameEvent("RESOURCE_CHANGED", { key: "stamina", amount: -cost, value: state.character.resources.stamina.current }));
+  events.push(gameEvent("WORLD_TILE_ENTERED", { ...next, terrain: terrain.key, step: state.world.steps }));
+}
+
+function gatherTerrain(events) {
+  const terrain = terrainAt(state.world.player.x, state.world.player.y);
+  if (!terrain?.gather) {
+    showToast("Nothing useful here");
+    return;
+  }
+  const definitions = {
+    "moon-herb": { definitionId: "moon-herb", type: "herb", name: "Moon Herb", rarity: "uncommon", value: 14, effects: [] },
+    "iron-ore": { definitionId: "iron-ore", type: "ore", name: "Iron Ore", rarity: "common", value: 9, effects: [] },
+    "arc-gem": { definitionId: "arc-gem", type: "gem", name: "Arc Gem", rarity: "epic", value: 85, effects: [] }
+  };
+  if (addItem(definitions[terrain.gather], 1, events)) showToast(`Gathered ${definitions[terrain.gather].name}`);
+}
+
+function facingVector() {
+  return {
+    north: [0, -1],
+    south: [0, 1],
+    west: [-1, 0],
+    east: [1, 0]
+  }[state.world.facing];
+}
+
+function terrainVariant(terrainKey) {
+  return hashString(`${state.world.seed}:${state.world.player.x}:${state.world.player.y}:${state.world.facing}:${terrainKey}`) % 3;
+}
+
+function resizeCanvas(canvas, contextKey) {
+  const rect = canvas.parentElement.getBoundingClientRect();
+  const preferred = state.runtime.qualityTier === "low" ? 1 : state.runtime.qualityTier === "medium" ? 1.25 : 1.5;
+  const dpr = Math.min(devicePixelRatio || 1, preferred);
+  canvas.width = Math.max(1, Math.round(rect.width * dpr));
+  canvas.height = Math.max(1, Math.round(rect.height * dpr));
+  if (contextKey === "map") {
+    worldRuntime.mapCanvas = canvas;
+    worldRuntime.mapContext = canvas.getContext("2d");
+    worldRuntime.mapWidth = rect.width;
+    worldRuntime.mapHeight = rect.height;
+    worldRuntime.mapDpr = dpr;
+  } else {
+    worldRuntime.viewCanvas = canvas;
+    worldRuntime.viewContext = canvas.getContext("2d");
+    worldRuntime.viewWidth = rect.width;
+    worldRuntime.viewHeight = rect.height;
+    worldRuntime.viewDpr = dpr;
+  }
+}
+
+function drawWorldMap() {
+  const context = worldRuntime.mapContext;
+  if (!context || !state.world.tiles.length) return;
+  const width = worldRuntime.mapWidth;
+  const height = worldRuntime.mapHeight;
+  context.setTransform(worldRuntime.mapDpr, 0, 0, worldRuntime.mapDpr, 0, 0);
+  context.clearRect(0, 0, width, height);
+  context.fillStyle = "#061019";
+  context.fillRect(0, 0, width, height);
+  const tile = worldRuntime.tileSize;
+  const startX = Math.floor(worldRuntime.cameraX / tile) - 1;
+  const startY = Math.floor(worldRuntime.cameraY / tile) - 1;
+  const endX = startX + Math.ceil(width / tile) + 3;
+  const endY = startY + Math.ceil(height / tile) + 3;
+  for (let y = startY; y <= endY; y += 1) {
+    for (let x = startX; x <= endX; x += 1) {
+      if (!inWorld(x, y)) continue;
+      const screenX = x * tile - worldRuntime.cameraX;
+      const screenY = y * tile - worldRuntime.cameraY;
+      const visible = state.world.visible[worldIndex(x, y)];
+      if (!visible) {
+        context.fillStyle = "#03070b";
+        context.fillRect(screenX, screenY, tile + 1, tile + 1);
+        continue;
+      }
+      const terrain = terrainAt(x, y);
+      context.fillStyle = terrain.color;
+      context.fillRect(screenX, screenY, tile + 1, tile + 1);
+      context.strokeStyle = "rgba(255,255,255,.06)";
+      context.strokeRect(screenX + .5, screenY + .5, tile, tile);
+      if (terrain.key === "forest") {
+        context.fillStyle = "rgba(12,38,22,.7)";
+        context.beginPath();
+        context.moveTo(screenX + tile * .5, screenY + 4);
+        context.lineTo(screenX + 5, screenY + tile - 4);
+        context.lineTo(screenX + tile - 5, screenY + tile - 4);
+        context.closePath();
+        context.fill();
+      }
+      if (terrain.key === "lake") {
+        context.strokeStyle = "rgba(200,240,255,.35)";
+        context.beginPath();
+        context.moveTo(screenX + 4, screenY + tile * .45);
+        context.quadraticCurveTo(screenX + tile * .5, screenY + tile * .25, screenX + tile - 4, screenY + tile * .45);
+        context.stroke();
+      }
+      if (terrain.key === "mountain") {
+        context.fillStyle = "rgba(220,235,240,.4)";
+        context.beginPath();
+        context.moveTo(screenX + 4, screenY + tile - 4);
+        context.lineTo(screenX + tile * .5, screenY + 4);
+        context.lineTo(screenX + tile - 4, screenY + tile - 4);
+        context.closePath();
+        context.fill();
+      }
+    }
+  }
+  const centerX = width / 2;
+  const centerY = height / 2;
+  context.save();
+  context.translate(centerX, centerY);
+  context.rotate({ north: 0, east: Math.PI / 2, south: Math.PI, west: -Math.PI / 2 }[state.world.facing]);
+  context.fillStyle = "#ffe39b";
+  context.strokeStyle = "#151006";
+  context.lineWidth = 3;
+  context.beginPath();
+  context.moveTo(0, -12);
+  context.lineTo(10, 10);
+  context.lineTo(0, 6);
+  context.lineTo(-10, 10);
+  context.closePath();
+  context.fill();
+  context.stroke();
+  context.restore();
+}
+
+function drawSky(context, width, height, palette) {
+  const gradient = context.createLinearGradient(0, 0, 0, height * .7);
+  gradient.addColorStop(0, palette.skyTop);
+  gradient.addColorStop(1, palette.skyBottom);
+  context.fillStyle = gradient;
+  context.fillRect(0, 0, width, height);
+}
+
+function drawDistantTerrain(context, key, width, height, horizon, palette) {
+  context.save();
+  if (key === "forest") {
+    context.fillStyle = palette.horizon;
+    for (let index = 0; index < 18; index += 1) {
+      const x = index * width / 17;
+      const peak = horizon - 20 - (index * 17 % 28);
+      context.beginPath();
+      context.moveTo(x - 25, horizon + 18);
+      context.lineTo(x, peak);
+      context.lineTo(x + 25, horizon + 18);
+      context.closePath();
+      context.fill();
+    }
+  } else if (key === "lake") {
+    context.fillStyle = palette.horizon;
+    context.fillRect(0, horizon, width, height - horizon);
+    context.strokeStyle = "rgba(225,248,255,.3)";
+    for (let index = 0; index < 5; index += 1) {
+      const y = horizon + 12 + index * 13;
+      context.beginPath();
+      context.moveTo(0, y);
+      context.quadraticCurveTo(width * .5, y - 5, width, y);
+      context.stroke();
+    }
+  } else if (key === "mountain") {
+    context.fillStyle = palette.horizon;
+    for (let index = 0; index < 5; index += 1) {
+      const x = index * width / 4;
+      const peak = horizon - 45 - (index * 29 % 54);
+      context.beginPath();
+      context.moveTo(x - width * .2, horizon + 32);
+      context.lineTo(x, peak);
+      context.lineTo(x + width * .22, horizon + 32);
+      context.closePath();
+      context.fill();
+    }
+  } else if (key === "swamp") {
+    context.fillStyle = palette.horizon;
+    context.fillRect(0, horizon, width, height - horizon);
+    context.strokeStyle = "rgba(21,43,34,.85)";
+    context.lineWidth = 6;
+    for (let index = 0; index < 8; index += 1) {
+      const x = (index + .4) * width / 8;
+      context.beginPath();
+      context.moveTo(x, horizon + 20);
+      context.lineTo(x + (index % 2 ? 8 : -8), horizon - 25 - (index * 13 % 30));
+      context.stroke();
+    }
+  } else if (key === "desert") {
+    context.fillStyle = palette.horizon;
+    context.beginPath();
+    context.moveTo(0, horizon + 25);
+    context.quadraticCurveTo(width * .3, horizon - 25, width * .58, horizon + 12);
+    context.quadraticCurveTo(width * .82, horizon + 35, width, horizon - 4);
+    context.lineTo(width, height);
+    context.lineTo(0, height);
+    context.closePath();
+    context.fill();
+  } else {
+    context.fillStyle = palette.horizon;
+    context.beginPath();
+    context.moveTo(0, horizon + 18);
+    context.quadraticCurveTo(width * .28, horizon - 18, width * .52, horizon + 8);
+    context.quadraticCurveTo(width * .76, horizon + 27, width, horizon - 3);
+    context.lineTo(width, height);
+    context.lineTo(0, height);
+    context.closePath();
+    context.fill();
+  }
+  context.restore();
+}
+
+function drawCloseTerrain(context, key, variant, width, height, horizon, palette, time) {
+  context.save();
+  if (key !== "lake") {
+    const gradient = context.createLinearGradient(0, horizon, 0, height);
+    gradient.addColorStop(0, palette.ground);
+    gradient.addColorStop(1, "#101817");
+    context.fillStyle = gradient;
+    context.fillRect(0, horizon, width, height - horizon);
+  }
+  if (key === "forest") {
+    const positions = variant === 0 ? [.06, .18, .84, .94] : variant === 1 ? [.04, .3, .72, .95] : [.1, .24, .78, .9];
+    for (let index = 0; index < positions.length; index += 1) {
+      const x = width * positions[index];
+      const base = height * (.8 + (index % 2) * .05);
+      const scale = 1 + (index % 3) * .16;
+      context.fillStyle = "#1e3023";
+      context.fillRect(x - 10 * scale, base - 130 * scale, 20 * scale, 150 * scale);
+      for (let tier = 0; tier < 3; tier += 1) {
+        const top = base - (170 + tier * 35) * scale;
+        const half = (55 - tier * 8) * scale;
+        context.fillStyle = ["#244c2f", "#2e6239", "#193b26"][(index + tier) % 3];
+        context.beginPath();
+        context.moveTo(x, top);
+        context.lineTo(x - half, top + 72 * scale);
+        context.lineTo(x + half, top + 72 * scale);
+        context.closePath();
+        context.fill();
+      }
+    }
+  } else if (key === "lake") {
+    const water = context.createLinearGradient(0, horizon, 0, height);
+    water.addColorStop(0, palette.horizon);
+    water.addColorStop(1, "#0c354a");
+    context.fillStyle = water;
+    context.fillRect(0, horizon, width, height - horizon);
+    context.strokeStyle = "rgba(225,248,255,.26)";
+    for (let index = 0; index < 8; index += 1) {
+      const y = horizon + 15 + index * (height - horizon) / 9;
+      context.beginPath();
+      context.moveTo(0, y + Math.sin(time + index) * 2);
+      context.bezierCurveTo(width * .3, y - 5, width * .72, y + 6, width, y);
+      context.stroke();
+    }
+  } else if (key === "grass") {
+    context.strokeStyle = "rgba(213,209,120,.62)";
+    context.lineWidth = 2;
+    const blades = state.runtime.qualityTier === "low" ? 24 : state.runtime.qualityTier === "medium" ? 38 : 55;
+    for (let index = 0; index < blades; index += 1) {
+      const x = index * 83 % width;
+      const base = height - (index % 5) * 8;
+      const bladeHeight = 16 + (index * 17 % 34);
+      context.beginPath();
+      context.moveTo(x, base);
+      context.quadraticCurveTo(x + Math.sin(time + index) * 5, base - bladeHeight * .55, x + (index % 2 ? 4 : -4), base - bladeHeight);
+      context.stroke();
+    }
+  } else if (key === "swamp") {
+    context.fillStyle = "rgba(21,58,49,.72)";
+    for (let index = 0; index < 5; index += 1) {
+      context.beginPath();
+      context.ellipse((index + .5) * width / 5, height - 28 - (index % 2) * 18, 55, 18, 0, 0, Math.PI * 2);
+      context.fill();
+    }
+    context.strokeStyle = "rgba(174,191,107,.58)";
+    context.lineWidth = 2;
+    for (let index = 0; index < 32; index += 1) {
+      const x = index * 47 % width;
+      context.beginPath();
+      context.moveTo(x, height);
+      context.lineTo(x + (index % 2 ? 6 : -6), height - 35 - (index * 11 % 40));
+      context.stroke();
+    }
+  } else if (key === "desert") {
+    context.strokeStyle = "rgba(255,226,164,.35)";
+    for (let index = 0; index < 5; index += 1) {
+      const y = horizon + 40 + index * 38;
+      context.beginPath();
+      context.moveTo(0, y);
+      context.quadraticCurveTo(width * .25, y - 18, width * .5, y);
+      context.quadraticCurveTo(width * .75, y + 18, width, y - 3);
+      context.stroke();
+    }
+  } else if (key === "mountain") {
+    context.fillStyle = "#293641";
+    context.beginPath();
+    context.moveTo(0, height);
+    context.lineTo(0, height * .42);
+    context.lineTo(width * .12, height * .58);
+    context.lineTo(width * .2, height * .35);
+    context.lineTo(width * .31, height * .61);
+    context.lineTo(width * .38, height);
+    context.closePath();
+    context.fill();
+    context.beginPath();
+    context.moveTo(width, height);
+    context.lineTo(width, height * .38);
+    context.lineTo(width * .86, height * .55);
+    context.lineTo(width * .78, height * .31);
+    context.lineTo(width * .65, height * .62);
+    context.lineTo(width * .58, height);
+    context.closePath();
+    context.fill();
+  }
+  context.restore();
+}
+
+function drawFirstPerson() {
+  const context = worldRuntime.viewContext;
+  if (!context || !state.world.tiles.length) return;
+  const width = worldRuntime.viewWidth;
+  const height = worldRuntime.viewHeight;
+  const current = terrainAt(state.world.player.x, state.world.player.y) || TERRAIN.grass;
+  const vector = facingVector();
+  const next = terrainAt(state.world.player.x + vector[0], state.world.player.y + vector[1]) || current;
+  const currentPalette = TERRAIN_PALETTES[current.key];
+  const nextPalette = TERRAIN_PALETTES[next.key];
+  const horizon = height * .48;
+  context.setTransform(worldRuntime.viewDpr, 0, 0, worldRuntime.viewDpr, 0, 0);
+  context.clearRect(0, 0, width, height);
+  drawSky(context, width, height, nextPalette);
+  drawDistantTerrain(context, next.key, width, height, horizon, nextPalette);
+  drawCloseTerrain(context, current.key, terrainVariant(current.key), width, height, horizon, currentPalette, worldRuntime.time);
+  const mist = context.createLinearGradient(0, horizon - 45, 0, horizon + 60);
+  mist.addColorStop(0, "transparent");
+  mist.addColorStop(.5, nextPalette.mist + "33");
+  mist.addColorStop(1, "transparent");
+  context.fillStyle = mist;
+  context.fillRect(0, horizon - 45, width, 105);
+  const vignette = context.createRadialGradient(width / 2, height / 2, height * .15, width / 2, height / 2, height * .75);
+  vignette.addColorStop(.5, "transparent");
+  vignette.addColorStop(1, "rgba(0,0,0,.52)");
+  context.fillStyle = vignette;
+  context.fillRect(0, 0, width, height);
+  if (worldRuntime.transition > 0) {
+    context.fillStyle = `rgba(255,255,255,${worldRuntime.transition * .08})`;
+    context.fillRect(0, 0, width, height);
+  }
+}
+
+/* ========================================================================== */
+/* DIALOGUE AND QUESTS                                                        */
+/* ========================================================================== */
+
+function startQuest(id, events) {
+  const questState = state.quests[id];
+  if (!questState || questState.status !== "inactive") return;
+  questState.status = "active";
+  events.push(gameEvent("QUEST_STARTED", { id }));
+  showToast(`${QUESTS[id].title} started`);
+}
+
+function chooseDialogue(index, events) {
+  const node = DIALOGUE[state.dialogue.node];
+  const choice = node?.choices[index];
+  if (!choice) return;
+  for (const effect of choice.effects || []) {
+    if (effect.type === "flag") state.dialogue.flags[effect.key] = effect.value;
+    if (effect.type === "quest") startQuest(effect.id, events);
+    if (effect.type === "reputation") state.factions.wardens = clamp(state.factions.wardens + effect.amount, -100, 100);
+  }
+  state.dialogue.node = choice.to;
+  if (!state.dialogue.visited.includes(choice.to)) state.dialogue.visited.push(choice.to);
+  events.push(gameEvent("DIALOGUE_CHOICE_MADE", { from: node, to: choice.to, index }));
+}
+
+function processQuestEvent(event) {
+  for (const [id, questState] of Object.entries(state.quests)) {
+    const definition = QUESTS[id];
+    if (!definition || questState.status !== "active") continue;
+    for (const objective of definition.objectives) {
+      if (objective.event !== event.type) continue;
+      if (objective.where && Object.entries(objective.where).some(([key, value]) => event.payload?.[key] !== value)) continue;
+      questState.progress[objective.id] = Math.min(objective.target, (questState.progress[objective.id] || 0) + (event.payload.amount || 1));
+    }
+    const complete = definition.objectives.every(objective => questState.progress[objective.id] >= objective.target);
+    if (complete && !questState.rewarded) {
+      questState.status = "done";
+      questState.rewarded = true;
+      const rewardEvents = [];
+      grantXp(definition.rewards.xp, rewardEvents);
+      state.factions.wardens = clamp(state.factions.wardens + definition.rewards.reputation, -100, 100);
+      rewardEvents.push(gameEvent("GOLD_CHANGED", { amount: definition.rewards.gold }));
+      setTimeout(() => rewardEvents.forEach(publish), 0);
+      publish(gameEvent("QUEST_COMPLETED", { id, title: definition.title }));
+      showToast(`${definition.title} completed`);
+    }
+  }
+}
+
+/* ========================================================================== */
+/* COMBAT                                                                     */
+/* ========================================================================== */
+
+function partyUnit(id) {
+  if (id === "aven") {
+    const derived = derivedCharacter();
+    return {
+      id: "aven",
+      name: state.character.name,
+      team: "party",
+      hp: state.character.resources.health.current,
+      maxHp: resourceMaximum("health"),
+      mana: state.character.resources.mana.current,
+      maxMana: resourceMaximum("mana"),
+      power: derived.stats.power,
+      magic: derived.stats.magic,
+      defense: derived.stats.defense,
+      speed: derived.stats.speed,
+      color: "#f1c75b",
+      abilities: derived.abilities,
+      statuses: [],
+      guard: 0,
+      protecting: false
+    };
+  }
+  if (id === "lyra") {
+    return {
+      id: "lyra",
+      name: "Lyra",
+      team: "party",
+      hp: 78,
+      maxHp: 78,
+      mana: 84,
+      maxMana: 84,
+      power: 22,
+      magic: 49,
+      defense: 18,
+      speed: 17,
+      color: "#b38dff",
+      abilities: ["strike", "guard", "tonic", "arcLance", "mend"],
+      statuses: [],
+      guard: 0,
+      protecting: false
+    };
+  }
+  return {
+    id: "tor",
+    name: "Tor",
+    team: "party",
+    hp: 122,
+    maxHp: 122,
+    mana: 30,
+    maxMana: 30,
+    power: 31,
+    magic: 11,
+    defense: 44,
+    speed: 10,
+    color: "#63dfa0",
+    abilities: ["strike", "guard", "tonic", "shieldBash", "provoke"],
+    statuses: [],
+    guard: 0,
+    protecting: false
+  };
+}
+
+function enemyUnit(id, index) {
+  const definitions = [
+    { name: "Ember Hound", hp: 116, mana: 0, power: 29, magic: 4, defense: 15, speed: 15, color: "#c85048", abilities: ["cinderLunge"] },
+    { name: "Ash Seer", hp: 88, mana: 60, power: 14, magic: 36, defense: 12, speed: 12, color: "#755b9c", abilities: ["hexBolt"] },
+    { name: "Mire Stalker", hp: 96, mana: 0, power: 23, magic: 8, defense: 20, speed: 13, color: "#4e7b58", abilities: ["cinderLunge"] }
+  ];
+  const definition = definitions[index % definitions.length];
+  return {
+    id,
+    name: definition.name,
+    team: "enemy",
+    hp: definition.hp,
+    maxHp: definition.hp,
+    mana: definition.mana,
+    maxMana: definition.mana,
+    power: definition.power,
+    magic: definition.magic,
+    defense: definition.defense,
+    speed: definition.speed,
+    color: definition.color,
+    abilities: [...definition.abilities],
+    statuses: [],
+    guard: 0,
+    protecting: false,
+    intent: definition.abilities[0]
+  };
+}
+
+function startCombat(seed, events = []) {
+  state.combat = {
+    active: true,
+    result: null,
+    seed,
+    round: 1,
+    index: 0,
+    queue: [],
+    pending: null,
+    busy: false,
+    units: [partyUnit("aven"), partyUnit("lyra"), partyUnit("tor"), enemyUnit("hound", 0), enemyUnit("seer", 1), enemyUnit("mire", 2)],
+    log: ["Encounter begins."]
+  };
+  buildTurnQueue();
+  prepareEnemyIntents();
+  events.push(gameEvent("COMBAT_STARTED", { seed }));
+}
+
+function living(team, sourceCombat = state.combat) {
+  return sourceCombat.units.filter(unit => unit.team === team && unit.hp > 0);
+}
+
+function buildTurnQueue(sourceCombat = state.combat) {
+  sourceCombat.queue = sourceCombat.units.filter(unit => unit.hp > 0).sort((a, b) => b.speed - a.speed).map(unit => unit.id);
+  sourceCombat.index = 0;
+}
+
+function activeUnit(sourceCombat = state.combat) {
+  return sourceCombat.units.find(unit => unit.id === sourceCombat.queue[sourceCombat.index]);
+}
+
+function prepareEnemyIntents(sourceCombat = state.combat) {
+  const random = seededRandom(sourceCombat.seed + sourceCombat.round * 37);
+  for (const enemy of living("enemy", sourceCombat)) enemy.intent = choose(enemy.abilities, random);
+}
+
+function validTargetIds(actor, ability, sourceCombat = state.combat) {
+  const allies = sourceCombat.units.filter(unit => unit.team === actor.team);
+  const enemies = sourceCombat.units.filter(unit => unit.team !== actor.team);
+  if (ability.target === "self") return [actor.id];
+  if (ability.target === "ally") return allies.filter(unit => unit.hp > 0).map(unit => unit.id);
+  if (ability.target === "enemy") return enemies.filter(unit => unit.hp > 0).map(unit => unit.id);
+  if (ability.target === "all-enemies") return enemies.filter(unit => unit.hp > 0).map(unit => unit.id);
+  return [];
+}
+
+function canUseAbility(actor, ability) {
+  if (!ability) return false;
+  if (ability.resource === "mana" && actor.mana < ability.cost) return false;
+  if (ability.resource === "item" && inventoryCount("health-tonic") < ability.cost) return false;
+  return validTargetIds(actor, ability).length > 0;
+}
+
+function chooseAbility(id, events) {
+  const actor = activeUnit();
+  const ability = ABILITIES[id];
+  if (!actor || actor.team !== "party" || state.combat.busy || !actor.abilities.includes(id) || !canUseAbility(actor, ability)) return;
+  const targets = validTargetIds(actor, ability);
+  if (ability.target === "self" || ability.target === "all-enemies") {
+    resolveAbility(actor, ability, targets[0], events);
+  } else {
+    state.combat.pending = { actorId: actor.id, abilityId: id, validTargets: targets };
+    events.push(gameEvent("COMBAT_TARGETING_STARTED", { actorId: actor.id, abilityId: id, targets }));
+  }
+}
+
+function selectTarget(id, events) {
+  const pending = state.combat.pending;
+  const actor = activeUnit();
+  if (!pending || !actor || pending.actorId !== actor.id || !pending.validTargets.includes(id)) return;
+  resolveAbility(actor, ABILITIES[pending.abilityId], id, events);
+}
+
+function damageUnit(actor, target, raw, type, events, sourceCombat = state.combat) {
+  const reduction = target.defense * .055 + target.guard;
+  const damage = Math.max(1, Math.round(raw - reduction));
+  target.guard = 0;
+  target.hp = Math.max(0, target.hp - damage);
+  sourceCombat.log.push(`${actor.name} deals ${damage} ${type} damage to ${target.name}.`);
+  if (sourceCombat.log.length > 14) sourceCombat.log.shift();
+  events.push(gameEvent("DAMAGE_DEALT", { source: actor.id, target: target.id, amount: damage, type }));
+  return damage;
+}
+
+function healUnit(actor, target, amount, events, sourceCombat = state.combat) {
+  const healed = Math.max(0, Math.min(target.maxHp - target.hp, Math.round(amount)));
+  target.hp += healed;
+  sourceCombat.log.push(`${actor.name} restores ${healed} health to ${target.name}.`);
+  events.push(gameEvent("HEAL_APPLIED", { source: actor.id, target: target.id, amount: healed }));
+}
+
+function resolveAbility(actor, ability, targetId, events, sourceCombat = state.combat) {
+  sourceCombat.pending = null;
+  sourceCombat.busy = true;
+  if (ability.resource === "mana") actor.mana -= ability.cost;
+  const target = sourceCombat.units.find(unit => unit.id === targetId) || actor;
+  const random = seededRandom(sourceCombat.seed + sourceCombat.round * 101 + sourceCombat.index * 17 + hashString(ability.id));
+  events.push(gameEvent("ABILITY_USED", { actor: actor.id, ability: ability.id, target: target.id }));
+  if (ability.id === "strike") damageUnit(actor, target, 10 + actor.power * .42, "physical", events, sourceCombat);
+  if (ability.id === "guard") {
+    actor.guard = Math.round(10 + actor.defense * .32);
+    sourceCombat.log.push(`${actor.name} braces for ${actor.guard} guard.`);
+  }
+  if (ability.id === "tonic") {
+    consumeItem("health-tonic", 1);
+    healUnit(actor, target, 35, events, sourceCombat);
+  }
+  if (ability.id === "runeCleave") {
+    damageUnit(actor, target, 15 + actor.power * .5, "physical", events, sourceCombat);
+    living("enemy", sourceCombat).filter(unit => unit.id !== target.id).slice(0, 1).forEach(unit => damageUnit(actor, unit, 7 + actor.power * .2, "physical", events, sourceCombat));
+  }
+  if (ability.id === "arcLance") damageUnit(actor, target, 18 + actor.magic * .52, "arcane", events, sourceCombat);
+  if (ability.id === "mend") healUnit(actor, target, 20 + actor.magic * .42, events, sourceCombat);
+  if (ability.id === "volley") living("enemy", sourceCombat).forEach(unit => damageUnit(actor, unit, 8 + actor.power * .26, "physical", events, sourceCombat));
+  if (ability.id === "shieldBash") damageUnit(actor, target, 11 + actor.defense * .35, "physical", events, sourceCombat);
+  if (ability.id === "provoke") {
+    damageUnit(actor, target, 8 + actor.power * .25, "physical", events, sourceCombat);
+    actor.protecting = true;
+  }
+  if (ability.id === "cinderLunge") damageUnit(actor, target, 12 + actor.power * .4, "physical", events, sourceCombat);
+  if (ability.id === "hexBolt") damageUnit(actor, target, 14 + actor.magic * .43, "arcane", events, sourceCombat);
+  if (sourceCombat === state.combat) setTimeout(() => advanceTurn(), state.settings.motion === "reduced" ? 40 : 520);
+}
+
+function checkCombatEnd(events, sourceCombat = state.combat) {
+  if (living("enemy", sourceCombat).length === 0) {
+    sourceCombat.result = "victory";
+    sourceCombat.busy = true;
+    events.push(gameEvent("COMBAT_VICTORY", { round: sourceCombat.round }));
+    return true;
+  }
+  if (living("party", sourceCombat).length === 0) {
+    sourceCombat.result = "defeat";
+    sourceCombat.busy = true;
+    events.push(gameEvent("COMBAT_DEFEAT", { round: sourceCombat.round }));
+    return true;
+  }
+  return false;
+}
+
+function advanceTurn() {
+  const events = [];
+  if (checkCombatEnd(events)) {
+    syncCombatToCharacter();
+    events.forEach(publish);
+    renderAll();
+    return;
+  }
+  state.combat.index += 1;
+  if (state.combat.index >= state.combat.queue.length) {
+    state.combat.round += 1;
+    buildTurnQueue();
+    prepareEnemyIntents();
+    events.push(gameEvent("COMBAT_ROUND_STARTED", { round: state.combat.round }));
+  }
+  while (activeUnit() && activeUnit().hp <= 0) {
+    state.combat.index += 1;
+    if (state.combat.index >= state.combat.queue.length) {
+      state.combat.round += 1;
+      buildTurnQueue();
+      prepareEnemyIntents();
+      break;
+    }
+  }
+  state.combat.busy = false;
+  events.forEach(publish);
+  syncCombatToCharacter();
+  renderAll();
+  if (activeUnit()?.team === "enemy") queueEnemyTurn();
+}
+
+function queueEnemyTurn() {
+  const actor = activeUnit();
+  if (!actor || actor.team !== "enemy" || state.combat.busy || state.combat.result) return;
+  state.combat.busy = true;
+  setTimeout(() => {
+    const events = [];
+    const ability = ABILITIES[actor.intent] || ABILITIES[actor.abilities[0]];
+    const random = seededRandom(state.combat.seed + state.combat.round * 211 + state.combat.index * 31);
+    const candidates = validTargetIds(actor, ability).map(id => state.combat.units.find(unit => unit.id === id)).filter(Boolean);
+    const target = [...candidates].sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[random() > .6 ? Math.floor(random() * candidates.length) : 0];
+    resolveAbility(actor, ability, target.id, events);
+    actor.intent = choose(actor.abilities, random);
+    events.forEach(publish);
+    renderAll();
+  }, state.settings.motion === "reduced" ? 80 : 560);
+}
+
+function syncCombatToCharacter() {
+  const aven = state.combat.units.find(unit => unit.id === "aven");
+  if (!aven) return;
+  state.character.resources.health.current = clamp(aven.hp, 0, resourceMaximum("health"));
+  state.character.resources.mana.current = clamp(aven.mana, 0, resourceMaximum("mana"));
+}
+
+function simulateCombat(seed) {
+  const localState = clone(state);
+  const previousState = state;
+  state = localState;
+  const events = [];
+  startCombat(seed, events);
+  const combat = state.combat;
+  let guard = 0;
+  while (!combat.result && guard < 200) {
+    const actor = activeUnit(combat);
+    if (!actor || actor.hp <= 0) {
+      combat.index += 1;
+      if (combat.index >= combat.queue.length) {
+        combat.round += 1;
+        buildTurnQueue(combat);
+      }
+      guard += 1;
+      continue;
+    }
+    const random = seededRandom(seed + combat.round * 31 + combat.index * 7);
+    const abilityId = actor.team === "party" ? actor.abilities.find(id => canUseAbility(actor, ABILITIES[id])) || "strike" : actor.intent;
+    const ability = ABILITIES[abilityId];
+    const targets = validTargetIds(actor, ability, combat);
+    const targetId = targets[Math.floor(random() * targets.length)] || actor.id;
+    resolveAbility(actor, ability, targetId, events, combat);
+    combat.busy = false;
+    if (checkCombatEnd(events, combat)) break;
+    combat.index += 1;
+    if (combat.index >= combat.queue.length) {
+      combat.round += 1;
+      buildTurnQueue(combat);
+      prepareEnemyIntents(combat);
+    }
+    guard += 1;
+  }
+  const result = {
+    result: combat.result,
+    round: combat.round,
+    hp: combat.units.map(unit => [unit.id, unit.hp])
+  };
+  state = previousState;
+  return result;
+}
+
+/* ========================================================================== */
+/* SETTINGS, INPUT, AND AUDIO                                                  */
+/* ========================================================================== */
+
+function setSetting(key, value, events) {
+  if (key.startsWith("audio.")) {
+    const audioKey = key.split(".")[1];
+    state.settings.audio[audioKey] = value;
+  } else {
+    state.settings[key] = value;
+  }
+  applySettings();
+  events.push(gameEvent("SETTING_CHANGED", { key, value }));
+}
+
+function applySettings() {
+  document.documentElement.style.setProperty("--font-scale", String(state.settings.fontScale / 100));
+  document.body.dataset.contrast = state.settings.contrast === "high" ? "high" : "normal";
+  document.body.dataset.motion = state.settings.motion;
+  document.body.dataset.flash = state.settings.flashes;
+  document.body.dataset.palette = state.settings.palette;
+  $("#font-scale").value = state.settings.fontScale;
+  $("#font-scale-output").textContent = `${state.settings.fontScale}%`;
+  $("#color-palette").value = state.settings.palette;
+  $("#high-contrast").checked = state.settings.contrast === "high";
+  $("#reduced-motion").checked = state.settings.motion === "reduced";
+  $("#reduced-flashes").checked = state.settings.flashes === "reduced";
+  $("#haptics-enabled").checked = state.settings.haptics;
+  $("#captions-enabled").checked = state.settings.captions;
+  $("#announcements-enabled").checked = state.settings.announcements;
+  $("#master-volume").value = Math.round(state.settings.audio.master * 100);
+  $("#music-volume").value = Math.round(state.settings.audio.music * 100);
+  $("#sfx-volume").value = Math.round(state.settings.audio.sfx * 100);
+  $("#ui-volume").value = Math.round(state.settings.audio.ui * 100);
+  $("#master-output").textContent = `${Math.round(state.settings.audio.master * 100)}%`;
+  $("#music-output").textContent = `${Math.round(state.settings.audio.music * 100)}%`;
+  $("#sfx-output").textContent = `${Math.round(state.settings.audio.sfx * 100)}%`;
+  $("#ui-output").textContent = `${Math.round(state.settings.audio.ui * 100)}%`;
+}
+
+function setBinding(action, code, events) {
+  const duplicate = Object.entries(state.settings.bindings).find(([key, value]) => key !== action && value === code);
+  if (duplicate) {
+    showToast(`${code} is already assigned to ${titleCase(duplicate[0])}`);
+    return;
+  }
+  state.settings.bindings[action] = code;
+  state.runtime.rebindingAction = null;
+  events.push(gameEvent("INPUT_BINDING_CHANGED", { action, code }));
+}
+
+function executeAction(action) {
+  const map = {
+    moveNorth: () => dispatch("MOVE_WORLD", { dx: 0, dy: -1 }),
+    moveSouth: () => dispatch("MOVE_WORLD", { dx: 0, dy: 1 }),
+    moveWest: () => dispatch("MOVE_WORLD", { dx: -1, dy: 0 }),
+    moveEast: () => dispatch("MOVE_WORLD", { dx: 1, dy: 0 }),
+    quickSave: () => saveSlot(0, "quick"),
+    openInventory: () => $("#inventory-grid").scrollIntoView({ behavior: state.settings.motion === "reduced" ? "auto" : "smooth" }),
+    confirm: () => state.combat.pending && dispatch("SELECT_TARGET", { id: state.combat.pending.validTargets[0] }),
+    cancel: () => dispatch("CANCEL_TARGET")
+  };
+  map[action]?.();
+}
+
+const audio = {
+  context: null,
+  master: null,
+  buses: {},
+  active: 0,
+  level: 0,
+  musicTimer: null
+};
+
+function ensureAudio() {
+  if (!audio.context) {
+    const Context = window.AudioContext || window.webkitAudioContext;
+    if (!Context) return null;
+    audio.context = new Context();
+    audio.master = audio.context.createGain();
+    audio.master.connect(audio.context.destination);
+    for (const name of ["music", "sfx", "ui"]) {
+      audio.buses[name] = audio.context.createGain();
+      audio.buses[name].connect(audio.master);
+    }
+  }
+  if (audio.context.state === "suspended") audio.context.resume();
+  updateAudioGains();
+  return audio.context;
+}
+
+function updateAudioGains() {
+  if (!audio.context) return;
+  audio.master.gain.value = state.settings.audio.muted ? 0 : state.settings.audio.master;
+  audio.buses.music.gain.value = state.settings.audio.music;
+  audio.buses.sfx.gain.value = state.settings.audio.sfx;
+  audio.buses.ui.gain.value = state.settings.audio.ui;
+}
+
+function playTone({ frequency = 440, duration = .16, type = "sine", bus = "sfx", gain = .15, slide = 0, caption = "Sound effect" }) {
+  const context = ensureAudio();
+  if (!context || audio.active >= 10) return;
+  audio.active += 1;
+  const oscillator = context.createOscillator();
+  const envelope = context.createGain();
+  oscillator.type = type;
+  oscillator.frequency.setValueAtTime(frequency, context.currentTime);
+  if (slide) oscillator.frequency.exponentialRampToValueAtTime(Math.max(20, frequency + slide), context.currentTime + duration);
+  envelope.gain.setValueAtTime(.0001, context.currentTime);
+  envelope.gain.exponentialRampToValueAtTime(gain, context.currentTime + .015);
+  envelope.gain.exponentialRampToValueAtTime(.0001, context.currentTime + duration);
+  oscillator.connect(envelope);
+  envelope.connect(audio.buses[bus] || audio.buses.sfx);
+  oscillator.start();
+  oscillator.stop(context.currentTime + duration + .02);
+  audio.level = Math.max(audio.level, gain);
+  oscillator.addEventListener("ended", () => { audio.active = Math.max(0, audio.active - 1); });
+  if (state.settings.captions) $("#audio-caption").textContent = `♪ ${caption}`;
+}
+
+function playSound(id) {
+  if (id === "ui") playTone({ frequency: 620, duration: .08, type: "sine", bus: "ui", gain: .09, slide: 100, caption: "Interface confirmation" });
+  if (id === "attack") {
+    playTone({ frequency: 130, duration: .18, type: "sawtooth", bus: "sfx", gain: .15, slide: -60, caption: "Weapon impact" });
+    setTimeout(() => playTone({ frequency: 80, duration: .12, type: "square", bus: "sfx", gain: .08, slide: -20, caption: "Impact resonance" }), 45);
+  }
+  if (id === "heal") {
+    [420, 540, 680].forEach((frequency, index) => setTimeout(() => playTone({ frequency, duration: .2, type: "sine", bus: "sfx", gain: .09, slide: 40, caption: "Healing chime" }), index * 70));
+  }
+  if (id === "victory") {
+    [330, 440, 550, 660].forEach((frequency, index) => setTimeout(() => playTone({ frequency, duration: .28, type: "triangle", bus: "music", gain: .1, slide: 25, caption: "Victory fanfare" }), index * 95));
+  }
+}
+
+/* ========================================================================== */
+/* STORAGE, AUTOSAVE, RECOVERY, AND MIGRATION                                  */
+/* ========================================================================== */
+
+const memoryStorage = new Map();
+const STORAGE_PREFIX = "forge-rpg-m5";
+const AUTOSAVE_KEY = `${STORAGE_PREFIX}:autosave`;
+const RECOVERY_KEY = `${STORAGE_PREFIX}:recovery`;
+const CHECKPOINT_KEY = `${STORAGE_PREFIX}:checkpoint`;
+let autosaveTimer = 0;
+
+function storageGet(key) {
+  try {
+    const local = localStorage.getItem(key);
+    if (local !== null) return local;
+  } catch (_error) {}
+  return memoryStorage.get(key) ?? null;
+}
+
+function storageSet(key, value) {
+  let localSucceeded = false;
+  try {
+    localStorage.setItem(key, value);
+    localSucceeded = true;
+  } catch (_error) {}
+  memoryStorage.set(key, value);
+  return localSucceeded || memoryStorage.has(key);
+}
+
+function storageDelete(key) {
+  try { localStorage.removeItem(key); } catch (_error) {}
+  memoryStorage.delete(key);
+}
+
+function saveKey(index) {
+  return `${STORAGE_PREFIX}:slot:${index}`;
+}
+
+function snapshotState() {
+  const clean = clone(state);
+  clean.runtime.rebindingAction = null;
+  clean.runtime.autosaveDirty = false;
+  clean.testResults = [];
+  return clean;
+}
+
+function makeSavePayload(kind = "manual") {
+  const snapshot = snapshotState();
+  return {
+    schemaVersion: SCHEMA_VERSION,
+    build: state.meta.build,
+    kind,
+    savedAt: nowIso(),
+    checksum: checksum(snapshot),
+    state: snapshot
+  };
+}
+
+function validateSavePayload(payload) {
+  if (!payload || typeof payload !== "object") return { valid: false, reason: "Missing payload" };
+  if (!payload.state || typeof payload.state !== "object") return { valid: false, reason: "Missing state" };
+  const actual = checksum(payload.state);
+  if (payload.checksum && payload.checksum !== actual) return { valid: false, reason: "Checksum mismatch" };
+  return { valid: true, reason: "Valid", actual };
+}
+
+function migrateState(input) {
+  const migrated = clone(input);
+  const defaults = createInitialState();
+  if (!migrated.version || migrated.version < 6) {
+    migrated.settings = { ...defaults.settings, ...(migrated.settings || {}) };
+    migrated.runtime = { ...defaults.runtime, ...(migrated.runtime || {}) };
+  }
+  if (migrated.version < 7) {
+    migrated.settings.bindings = { ...DEFAULT_BINDINGS, ...(migrated.settings.bindings || {}) };
+    migrated.settings.audio = { ...defaults.settings.audio, ...(migrated.settings.audio || {}) };
+    migrated.testResults = [];
+  }
+  migrated.version = SCHEMA_VERSION;
+  migrated.meta = { ...defaults.meta, ...(migrated.meta || {}), updatedAt: nowIso() };
+  migrated.character = { ...defaults.character, ...(migrated.character || {}) };
+  migrated.inventory = { ...defaults.inventory, ...(migrated.inventory || {}) };
+  migrated.world = { ...defaults.world, ...(migrated.world || {}) };
+  migrated.dialogue = { ...defaults.dialogue, ...(migrated.dialogue || {}) };
+  migrated.quests = { ...defaults.quests, ...(migrated.quests || {}) };
+  migrated.party = { ...defaults.party, ...(migrated.party || {}) };
+  migrated.combat = { ...defaults.combat, ...(migrated.combat || {}) };
+  migrated.settings = { ...defaults.settings, ...(migrated.settings || {}) };
+  migrated.runtime = { ...defaults.runtime, ...(migrated.runtime || {}) };
+  return migrated;
+}
+
+function validateAndMigrate(input) {
+  const migrated = migrateState(input);
+  if (!Array.isArray(migrated.inventory.items)) migrated.inventory.items = [];
+  if (!Array.isArray(migrated.world.tiles)) migrated.world.tiles = [];
+  if (!Array.isArray(migrated.world.visible)) migrated.world.visible = [];
+  if (!Array.isArray(migrated.telemetry)) migrated.telemetry = [];
+  return migrated;
+}
+
+function transactionalWrite(key, payload) {
+  const tempKey = `${key}:temp`;
+  const serialized = JSON.stringify(payload);
+  storageSet(tempKey, serialized);
+  const verify = safeJsonParse(storageGet(tempKey));
+  if (!validateSavePayload(verify).valid) {
+    storageDelete(tempKey);
+    throw new Error("Transactional verification failed");
+  }
+  storageSet(key, serialized);
+  storageDelete(tempKey);
+}
+
+function saveSlot(index, kind = "manual") {
+  try {
+    const payload = makeSavePayload(kind);
+    transactionalWrite(index === 0 ? AUTOSAVE_KEY : saveKey(index), payload);
+    state.runtime.lastAutosaveAt = payload.savedAt;
+    state.runtime.autosaveDirty = false;
+    showToast(index === 0 ? "Quick save complete" : `Saved slot ${index}`);
+    announce("Game saved");
+    renderSaveSystem();
+  } catch (error) {
+    showToast(error.message);
+  }
+}
+
+function loadStored(key, source) {
+  const payload = safeJsonParse(storageGet(key));
+  const validation = validateSavePayload(payload);
+  if (!validation.valid) {
+    showToast(validation.reason);
+    return;
+  }
+  dispatch("LOAD_STATE", { state: payload.state, source });
+  applySettings();
+  centerMapCamera();
+  showToast(`${source} loaded`);
+}
+
+function markAutosaveDirty(commandType) {
+  if (["SET_SETTING", "SET_BINDING"].includes(commandType)) {
+    scheduleAutosave(600);
+    return;
+  }
+  state.runtime.autosaveDirty = true;
+  clearTimeout(autosaveTimer);
+  scheduleAutosave(1200);
+}
+
+function scheduleAutosave(delay) {
+  clearTimeout(autosaveTimer);
+  autosaveTimer = setTimeout(() => {
+    if (!state.runtime.autosaveDirty && storageGet(AUTOSAVE_KEY)) return;
+    const previousAutosave = storageGet(AUTOSAVE_KEY);
+    if (previousAutosave) storageSet(RECOVERY_KEY, previousAutosave);
+    saveSlot(0, "autosave");
+  }, delay);
+}
+
+function createCheckpoint() {
+  const payload = makeSavePayload("checkpoint");
+  transactionalWrite(CHECKPOINT_KEY, payload);
+  state.runtime.lastCheckpointAt = payload.savedAt;
+  showToast("Checkpoint created");
+  renderSaveSystem();
+}
+
+function inspectRecovery() {
+  const payload = safeJsonParse(storageGet(RECOVERY_KEY));
+  const validation = validateSavePayload(payload);
+  state.runtime.recoveryAvailable = validation.valid;
+  const banner = $("#recovery-banner");
+  banner.classList.toggle("show", validation.valid);
+  if (validation.valid) $("#recovery-copy").textContent = `${payload.kind} from ${new Date(payload.savedAt).toLocaleString()} · schema ${payload.schemaVersion}`;
+  $("#hero-save").textContent = validation.valid ? "RECOVER" : "READY";
+}
+
+/* ========================================================================== */
+/* DETERMINISTIC TEST HARNESS                                                  */
+/* ========================================================================== */
+
+const TESTS = [
+  {
+    id: "world-determinism",
+    name: "World generation is deterministic",
+    group: "world",
+    run() {
+      const a = createInitialState();
+      const b = createInitialState();
+      generateWorld("TEST-WORLD-1", [], a);
+      generateWorld("TEST-WORLD-1", [], b);
+      return checksum(a.world.tiles) === checksum(b.world.tiles);
+    }
+  },
+  {
+    id: "world-seed-difference",
+    name: "Different world seeds diverge",
+    group: "world",
+    run() {
+      const a = createInitialState();
+      const b = createInitialState();
+      generateWorld("TEST-WORLD-A", [], a);
+      generateWorld("TEST-WORLD-B", [], b);
+      return checksum(a.world.tiles) !== checksum(b.world.tiles);
+    }
+  },
+  {
+    id: "loot-determinism",
+    name: "Generated loot is deterministic",
+    group: "content",
+    run() {
+      return checksum(generateItem("LOOT-77")) === checksum(generateItem("LOOT-77"));
+    }
+  },
+  {
+    id: "inventory-unique",
+    name: "Inventory instance IDs are unique",
+    group: "content",
+    run() {
+      const ids = state.inventory.items.map(item => item.instanceId);
+      return ids.length === new Set(ids).size;
+    }
+  },
+  {
+    id: "save-roundtrip",
+    name: "Save roundtrip preserves checksum",
+    group: "save",
+    run() {
+      const payload = makeSavePayload("test");
+      const parsed = JSON.parse(JSON.stringify(payload));
+      return validateSavePayload(parsed).valid && checksum(parsed.state) === checksum(payload.state);
+    }
+  },
+  {
+    id: "migration",
+    name: "Old state migrates to schema 7",
+    group: "save",
+    run() {
+      const old = createInitialState();
+      old.version = 5;
+      delete old.settings.audio;
+      delete old.settings.bindings;
+      const migrated = migrateState(old);
+      return migrated.version === 7 && migrated.settings.audio && migrated.settings.bindings;
+    }
+  },
+  {
+    id: "combat-determinism",
+    name: "Combat replay is deterministic",
+    group: "combat",
+    run() {
+      return checksum(simulateCombat(44881)) === checksum(simulateCombat(44881));
+    }
+  },
+  {
+    id: "combat-terminates",
+    name: "Combat simulation terminates",
+    group: "combat",
+    run() {
+      const result = simulateCombat(55118);
+      return ["victory", "defeat"].includes(result.result) && result.round < 100;
+    }
+  },
+  {
+    id: "bindings-unique",
+    name: "Input bindings contain no duplicates",
+    group: "input",
+    run() {
+      const values = Object.values(state.settings.bindings);
+      return values.length === new Set(values).size;
+    }
+  },
+  {
+    id: "terrain-registry",
+    name: "Every terrain has palette and renderer data",
+    group: "content",
+    run() {
+      return TERRAIN_KEYS.every(key => TERRAIN_PALETTES[key] && Number.isFinite(TERRAIN[key].cost));
+    }
+  },
+  {
+    id: "quest-events",
+    name: "Quest objective events have valid targets",
+    group: "narrative",
+    run() {
+      return Object.values(QUESTS).every(quest => quest.objectives.every(objective => objective.event && objective.target > 0));
+    }
+  },
+  {
+    id: "source-registry",
+    name: "Every export component has a source package",
+    group: "delivery",
+    run() {
+      return Object.values(SOURCE_COMPONENTS).every(component => typeof component.build === "function" && component.build().includes("<!doctype html>"));
+    }
+  }
+];
+
+async function runTests(filter = null) {
+  const selected = filter ? TESTS.filter(test => test.group === filter) : TESTS;
+  const started = performance.now();
+  state.testResults = selected.map(test => ({ id: test.id, name: test.name, status: "pending", duration: 0 }));
+  renderTests();
+  for (const result of state.testResults) {
+    const definition = TESTS.find(test => test.id === result.id);
+    const testStart = performance.now();
+    try {
+      await Promise.resolve();
+      result.status = definition.run() ? "pass" : "fail";
+    } catch (error) {
+      result.status = "fail";
+      result.error = error.message;
+    }
+    result.duration = performance.now() - testStart;
+    renderTests();
+    await sleep(20);
+  }
+  const duration = performance.now() - started;
+  profiler.lastTestTime = duration;
+  renderTests();
+  const failures = state.testResults.filter(result => result.status === "fail").length;
+  showToast(failures ? `${failures} tests failed` : "All tests passed");
+  announce(failures ? `${failures} tests failed` : "All tests passed", true);
+}
+
+/* ========================================================================== */
+/* PERFORMANCE PROFILER                                                       */
+/* ========================================================================== */
+
+const profiler = {
+  canvas: null,
+  context: null,
+  width: 0,
+  height: 0,
+  dpr: 1,
+  frameHistory: [],
+  fps: 60,
+  frameMs: 16.7,
+  lastTimestamp: performance.now(),
+  commandTimes: [],
+  lastTestTime: 0,
+  stressUntil: 0,
+  adaptiveClock: 0
+};
+
+function resizeProfiler() {
+  const canvas = $("#profiler-canvas");
+  const rect = canvas.parentElement.getBoundingClientRect();
+  const dpr = Math.min(devicePixelRatio || 1, 1.5);
+  canvas.width = Math.max(1, Math.round(rect.width * dpr));
+  canvas.height = Math.max(1, Math.round(rect.height * dpr));
+  profiler.canvas = canvas;
+  profiler.context = canvas.getContext("2d");
+  profiler.width = rect.width;
+  profiler.height = rect.height;
+  profiler.dpr = dpr;
+}
+
+function recordFrame(timestamp) {
+  const delta = clamp(timestamp - profiler.lastTimestamp, 1, 250);
+  profiler.lastTimestamp = timestamp;
+  profiler.frameMs = lerp(profiler.frameMs, delta, .1);
+  profiler.fps = lerp(profiler.fps, 1000 / delta, .1);
+  profiler.frameHistory.push(delta);
+  if (profiler.frameHistory.length > 120) profiler.frameHistory.shift();
+  if (delta > 34) {
+    state.runtime.longFrames += 1;
+    profiler.adaptiveClock += 1;
+  } else {
+    profiler.adaptiveClock = Math.max(0, profiler.adaptiveClock - .25);
+  }
+  if (state.settings.adaptiveQuality) {
+    if (profiler.adaptiveClock > 12 && state.runtime.qualityTier !== "low") {
+      state.runtime.qualityTier = state.runtime.qualityTier === "high" ? "medium" : "low";
+      profiler.adaptiveClock = 0;
+      resizeAllCanvases();
+    }
+    if (profiler.fps > 57 && profiler.adaptiveClock === 0 && state.runtime.qualityTier !== "high" && profiler.frameHistory.length >= 100) {
+      state.runtime.qualityTier = state.runtime.qualityTier === "low" ? "medium" : "high";
+      resizeAllCanvases();
+    }
+  }
+}
+
+function drawProfiler() {
+  const context = profiler.context;
+  if (!context) return;
+  context.setTransform(profiler.dpr, 0, 0, profiler.dpr, 0, 0);
+  context.clearRect(0, 0, profiler.width, profiler.height);
+  context.fillStyle = "#071019";
+  context.fillRect(0, 0, profiler.width, profiler.height);
+  context.strokeStyle = "rgba(255,255,255,.08)";
+  context.lineWidth = 1;
+  for (const target of [16.7, 33.3, 50]) {
+    const y = profiler.height - target / 60 * profiler.height;
+    context.beginPath();
+    context.moveTo(0, y);
+    context.lineTo(profiler.width, y);
+    context.stroke();
+  }
+  if (!profiler.frameHistory.length) return;
+  context.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue("--cyan").trim() || "#65dcec";
+  context.lineWidth = 2;
+  context.beginPath();
+  profiler.frameHistory.forEach((frame, index) => {
+    const x = index / Math.max(1, profiler.frameHistory.length - 1) * profiler.width;
+    const y = profiler.height - clamp(frame, 0, 60) / 60 * profiler.height;
+    if (index === 0) context.moveTo(x, y);
+    else context.lineTo(x, y);
+  });
+  context.stroke();
+}
+
+function runStressPulse() {
+  profiler.stressUntil = performance.now() + 2200;
+  showToast("Stress pulse running");
+}
+
+function stressWork() {
+  if (performance.now() > profiler.stressUntil) return;
+  let value = 0;
+  for (let index = 0; index < 18000; index += 1) value += Math.sin(index) * Math.cos(index * .3);
+  return value;
+}
+
+/* ========================================================================== */
+/* EXACT SOURCE PACKAGE REGISTRY                                               */
+/* ========================================================================== */
+
+function sourceShell(title, style, body, script) {
+  return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>${title}</title>
+<style>
+${style}
+</style>
+</head>
+<body>
+${body}
+<script>
+${script}
+<\/script>
+</body>
+</html>`;
+}
+
+const SOURCE_COMPONENTS = {
+  "resource-hud": {
+    name: "Authoritative Resource HUD",
+    description: "Standalone resource component using the same current/maximum model and accessible labels as the showroom.",
+    build() {
+      return sourceShell(
+        "FORGE Resource HUD",
+        `:root{color-scheme:dark}body{margin:0;padding:20px;background:#071019;color:#fff;font-family:system-ui}.stack{display:grid;gap:8px;max-width:520px}.meter{position:relative;height:38px;border:1px solid #2b4054;border-radius:12px;overflow:hidden;background:#071019}.fill{height:100%;width:var(--pct);background:linear-gradient(90deg,var(--dark),var(--color));transition:width .3s ease}.label{position:absolute;inset:0;padding:0 10px;display:flex;align-items:center;justify-content:space-between;font-weight:800}button{min-height:44px;border:1px solid #2b4054;border-radius:12px;color:#fff;background:#132131}`,
+        `<main><div class="stack" id="stack"></div><button id="damage">Apply damage</button><button id="restore">Restore</button></main>`,
+        `const state={health:{current:84,max:120,color:'#f06773',dark:'#742d3a'},mana:{current:52,max:70,color:'#65dcec',dark:'#174c63'},stamina:{current:86,max:100,color:'#63dfa0',dark:'#24543c'}};function render(){document.querySelector('#stack').innerHTML=Object.entries(state).map(([id,r])=>'<div class="meter" role="meter" aria-label="'+id+'" aria-valuemin="0" aria-valuemax="'+r.max+'" aria-valuenow="'+r.current+'"><div class="fill" style="--pct:'+(r.current/r.max*100)+'%;--color:'+r.color+';--dark:'+r.dark+'"></div><div class="label"><span>'+id.toUpperCase()+'</span><span>'+r.current+' / '+r.max+'</span></div></div>').join('')}document.querySelector('#damage').onclick=()=>{state.health.current=Math.max(0,state.health.current-18);render()};document.querySelector('#restore').onclick=()=>{Object.values(state).forEach(r=>r.current=r.max);render()};render();`
+      );
+    }
+  },
+  "world-compositor": {
+    name: "Dynamic Terrain Compositor",
+    description: "Standalone six-terrain overhead map and current/distant first-person layer compositor.",
+    build() {
+      return sourceShell(
+        "FORGE Terrain Compositor",
+        `body{margin:0;padding:12px;background:#071019;color:#fff;font-family:system-ui}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}canvas{width:100%;height:340px;border:1px solid #2b4054;border-radius:16px;background:#071019}button{width:52px;height:52px;border:1px solid #2b4054;border-radius:12px;color:#fff;background:#132131}.pad{display:flex;justify-content:center;gap:6px;margin-top:8px}@media(max-width:700px){.grid{grid-template-columns:1fr}}`,
+        `<div class="grid"><canvas id="map"></canvas><canvas id="view"></canvas></div><div class="pad"><button data-d="w">←</button><button data-d="n">↑</button><button data-d="s">↓</button><button data-d="e">→</button></div>`,
+        `const types=['grass','forest','mountain','lake','swamp','desert'],colors={grass:'#456f48',forest:'#557c55',mountain:'#5c6e7d',lake:'#1d586f',swamp:'#42634e',desert:'#b88b50'},state={x:12,y:9,facing:'n',tiles:[]};for(let y=0;y<24;y++)for(let x=0;x<32;x++){const n=Math.abs(Math.sin(x*.31+y*.17));state.tiles.push(types[Math.min(5,Math.floor(n*6))])}function terrain(x,y){return state.tiles[y*32+x]||'grass'}function size(c){const r=c.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,1.5);c.width=r.width*d;c.height=r.height*d;return[c.getContext('2d'),r.width,r.height,d]}function draw(){let[c,w,h,d]=size(document.querySelector('#map'));c.setTransform(d,0,0,d,0,0);const t=18,ox=w/2-state.x*t,oy=h/2-state.y*t;for(let y=0;y<24;y++)for(let x=0;x<32;x++){c.fillStyle=colors[terrain(x,y)];c.fillRect(ox+x*t,oy+y*t,t+1,t+1)}c.fillStyle='#ffe39b';c.beginPath();c.arc(w/2,h/2,7,0,Math.PI*2);c.fill();[c,w,h,d]=size(document.querySelector('#view'));c.setTransform(d,0,0,d,0,0);const current=terrain(state.x,state.y),v={n:[0,-1],s:[0,1],w:[-1,0],e:[1,0]}[state.facing],next=terrain(state.x+v[0],state.y+v[1]);const g=c.createLinearGradient(0,0,0,h);g.addColorStop(0,'#63889b');g.addColorStop(1,colors[next]);c.fillStyle=g;c.fillRect(0,0,w,h);c.fillStyle=colors[current];c.beginPath();c.moveTo(0,h);c.lineTo(0,h*.55);c.quadraticCurveTo(w*.5,h*.38,w,h*.55);c.lineTo(w,h);c.fill();c.fillStyle='#fff';c.fillText(current.toUpperCase()+' / '+next.toUpperCase(),12,24)}document.addEventListener('click',e=>{const d=e.target.dataset.d;if(!d)return;state.facing=d;const v={n:[0,-1],s:[0,1],w:[-1,0],e:[1,0]}[d],next=terrain(state.x+v[0],state.y+v[1]);if(next!=='lake'){state.x+=v[0];state.y+=v[1]}draw()});addEventListener('resize',draw);draw();`
+      );
+    }
+  },
+  "target-combat": {
+    name: "Selectable Target Combat",
+    description: "Standalone command and target-selection loop using accessible battlefield buttons.",
+    build() {
+      return sourceShell(
+        "FORGE Target Combat",
+        `body{margin:0;padding:12px;background:#071019;color:#fff;font-family:system-ui}.field{position:relative;height:420px;border:1px solid #2b4054;border-radius:18px;background:linear-gradient(#384b60 0 34%,#26353b 35% 63%,#11191e 64%)}.unit{position:absolute;left:var(--x);top:var(--y);transform:translate(-50%,-50%);width:90px;min-height:86px;border:1px solid #2b4054;border-radius:14px;color:#fff;background:#132131}.unit.valid{box-shadow:0 0 18px #65dcec}.commands{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-top:8px}.commands button{min-height:48px;border:1px solid #2b4054;border-radius:12px;color:#fff;background:#132131}`,
+        `<div class="field" id="field"></div><div class="commands"><button data-a="strike">Strike</button><button data-a="heal">Heal</button></div><p id="status"></p>`,
+        `const state={pending:null,units:[{id:'hero',name:'Hero',team:'party',hp:100,x:'20%',y:'55%'},{id:'ally',name:'Ally',team:'party',hp:70,x:'32%',y:'38%'},{id:'enemy',name:'Enemy',team:'enemy',hp:120,x:'76%',y:'52%'}]};function render(){document.querySelector('#field').innerHTML=state.units.map(u=>'<button class="unit '+(state.pending&&state.pending.targets.includes(u.id)?'valid':'')+'" data-id="'+u.id+'" style="--x:'+u.x+';--y:'+u.y+'">'+u.name+'<br>'+u.hp+' HP</button>').join('');document.querySelector('#status').textContent=state.pending?'Choose a target':'Choose a command'}function choose(a){state.pending={ability:a,targets:state.units.filter(u=>a==='strike'?u.team==='enemy':u.team==='party').map(u=>u.id)};render()}function target(id){if(!state.pending||!state.pending.targets.includes(id))return;const u=state.units.find(x=>x.id===id);if(state.pending.ability==='strike')u.hp=Math.max(0,u.hp-24);else u.hp=Math.min(100,u.hp+22);state.pending=null;render()}document.addEventListener('click',e=>{if(e.target.dataset.a)choose(e.target.dataset.a);if(e.target.dataset.id)target(e.target.dataset.id)});render();`
+      );
+    }
+  },
+  "autosave-recovery": {
+    name: "Transactional Autosave",
+    description: "Standalone checksum, transactional temporary key, autosave, and recovery snapshot example.",
+    build() {
+      return sourceShell(
+        "FORGE Autosave Recovery",
+        `body{margin:0;padding:20px;background:#071019;color:#fff;font-family:system-ui}button{min-height:44px;margin:4px;border:1px solid #2b4054;border-radius:12px;color:#fff;background:#132131}pre{padding:12px;border:1px solid #2b4054;border-radius:14px;background:#061019;white-space:pre-wrap}`,
+        `<button id="change">Change state</button><button id="save">Transactional save</button><button id="recover">Recover previous</button><pre id="out"></pre>`,
+        `let state={version:1,gold:10,steps:0};const key='forge-autosave-demo',recovery=key+':recovery';function hash(v){let h=2166136261;for(const c of JSON.stringify(v)){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return(h>>>0).toString(16)}function payload(){return{savedAt:new Date().toISOString(),checksum:hash(state),state:structuredClone(state)}}function write(){const old=localStorage.getItem(key);if(old)localStorage.setItem(recovery,old);const p=payload(),temp=key+':temp';localStorage.setItem(temp,JSON.stringify(p));const check=JSON.parse(localStorage.getItem(temp));if(check.checksum!==hash(check.state))throw Error('Verification failed');localStorage.setItem(key,JSON.stringify(p));localStorage.removeItem(temp);render()}function render(){document.querySelector('#out').textContent=JSON.stringify({state,autosave:JSON.parse(localStorage.getItem(key)||'null'),recovery:JSON.parse(localStorage.getItem(recovery)||'null')},null,2)}document.querySelector('#change').onclick=()=>{state.steps++;state.gold+=3;render()};document.querySelector('#save').onclick=write;document.querySelector('#recover').onclick=()=>{const p=JSON.parse(localStorage.getItem(recovery)||'null');if(p&&p.checksum===hash(p.state))state=p.state;render()};render();`
+      );
+    }
+  },
+  "test-harness": {
+    name: "Deterministic Test Harness",
+    description: "Standalone asynchronous test runner with pass/fail timing and seeded assertions.",
+    build() {
+      return sourceShell(
+        "FORGE Test Harness",
+        `body{margin:0;padding:20px;background:#071019;color:#fff;font-family:system-ui}button{min-height:44px;border:1px solid #2b4054;border-radius:12px;color:#fff;background:#132131}.result{margin-top:7px;padding:9px;border:1px solid #2b4054;border-radius:11px}.pass{color:#63dfa0}.fail{color:#f06773}`,
+        `<button id="run">Run tests</button><div id="results"></div>`,
+        `function rng(seed){return()=>{let t=seed+=0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296}}const tests=[{name:'Seed repeatability',run(){const a=rng(4),b=rng(4);return[a(),a(),a()].join() === [b(),b(),b()].join()}},{name:'Different seeds diverge',run(){return rng(1)()!==rng(2)()}},{name:'Save JSON roundtrip',run(){const s={hp:80};return JSON.parse(JSON.stringify(s)).hp===80}}];async function run(){const out=[];for(const t of tests){const start=performance.now();let pass=false,error='';try{pass=await t.run()}catch(e){error=e.message}out.push({name:t.name,pass,time:performance.now()-start,error});document.querySelector('#results').innerHTML=out.map(r=>'<div class="result '+(r.pass?'pass':'fail')+'">'+(r.pass?'PASS':'FAIL')+' · '+r.name+' · '+r.time.toFixed(2)+'ms '+r.error+'</div>').join('');await new Promise(r=>setTimeout(r,30))}}document.querySelector('#run').onclick=run;`
+      );
+    }
+  }
+};
+
+/* ========================================================================== */
+/* RENDERERS                                                                  */
+/* ========================================================================== */
+
+function itemIcon(item) {
+  const color = item.palette?.main || "#486579";
+  const highlight = item.palette?.highlight || RARITY_COLORS[item.rarity] || "#9ba8b5";
+  const gem = item.palette?.gem || "#65dcec";
+  if (item.type === "sword") return `<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M70 8l13 13-48 54-13-13z" fill="${highlight}"/><path d="M19 58l23 23-8 8-23-23z" fill="${gem}"/><path d="M29 78l10 10-17 10-4-4z" fill="${color}"/></svg>`;
+  if (item.type === "staff") return `<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M48 18h8v76h-8z" fill="${color}"/><circle cx="52" cy="18" r="13" fill="${gem}" stroke="${highlight}" stroke-width="5"/></svg>`;
+  if (item.type === "bow") return `<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M25 10q45 40 0 80" fill="none" stroke="${color}" stroke-width="9"/><path d="M25 10v80" stroke="${highlight}" stroke-width="2"/><path d="M22 48h63" stroke="${gem}" stroke-width="4"/></svg>`;
+  if (item.type === "shield") return `<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M17 18q33-20 66 0l-6 54q-27 25-54 0z" fill="${color}" stroke="${highlight}" stroke-width="5"/><circle cx="50" cy="43" r="12" fill="${gem}"/></svg>`;
+  if (item.type === "helm") return `<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M18 57q2-46 32-48 31 2 32 48l-15-10H33z" fill="${color}" stroke="${highlight}" stroke-width="5"/><path d="M34 54v34h32V54" fill="none" stroke="${gem}" stroke-width="6"/></svg>`;
+  if (item.type === "armor") return `<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M28 18l22-9 22 9 15 63-37 12-37-12z" fill="${color}" stroke="${highlight}" stroke-width="5"/><path d="M50 20l10 18-10 18-10-18z" fill="${gem}"/></svg>`;
+  if (item.type === "ring") return `<svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="58" r="25" fill="none" stroke="${highlight}" stroke-width="12"/><path d="M35 29l15-18 15 18-15 14z" fill="${gem}"/></svg>`;
+  if (item.type === "cloak") return `<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M35 12h30l19 80-34-12-34 12z" fill="${color}" stroke="${highlight}" stroke-width="5"/><circle cx="50" cy="18" r="8" fill="${gem}"/></svg>`;
+  return `<svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="31" fill="${color}" stroke="${highlight}" stroke-width="5"/><circle cx="50" cy="50" r="10" fill="${gem}"/></svg>`;
+}
+
+function renderCharacter() {
+  const derived = derivedCharacter();
+  $("#doll-head ellipse").setAttribute("fill", state.character.skin);
+  $("#doll-head path").setAttribute("fill", state.character.hair);
+  $("#doll-helmet").setAttribute("opacity", state.character.helmetVisible ? "1" : "0");
+  $("#doll-shield").setAttribute("opacity", state.character.shieldVisible ? "1" : "0");
+  $("#character-seed").value = state.character.seed;
+  $("#character-class").value = state.character.classId;
+  $("#skin-color").value = state.character.skin;
+  $("#hair-color").value = state.character.hair;
+  $("#character-stats").innerHTML = Object.entries(derived.stats).slice(0, 4).map(([key, value]) => `<div class="character-stat"><strong>${value}</strong><small>${key.toUpperCase()}</small></div>`).join("");
+  const colors = {
+    health: ["#742d3a", "#f06773"],
+    mana: ["#174c63", "#65dcec"],
+    stamina: ["#24543c", "#63dfa0"]
+  };
+  $("#resource-stack").innerHTML = Object.entries(state.character.resources).map(([key, resource]) => {
+    const maximum = resourceMaximum(key);
+    const percent = clamp(resource.current / maximum * 100, 0, 100);
+    return `<div class="resource-meter" role="meter" aria-label="${key}" aria-valuemin="0" aria-valuemax="${maximum}" aria-valuenow="${resource.current}"><div class="fill" style="--value:${percent}%;--dark:${colors[key][0]};--meter:${colors[key][1]}"></div><div class="label"><span>${key.toUpperCase()}</span><span>${resource.current} / ${maximum}</span></div></div>`;
+  }).join("");
+  $("#hero-version").textContent = state.version;
+}
+
+function renderInventory() {
+  const selected = state.inventory.items.find(item => item.instanceId === state.runtime.selectedItemId) || state.inventory.items[0] || null;
+  if (selected) state.runtime.selectedItemId = selected.instanceId;
+  const slots = Array.from({ length: state.inventory.capacity }, (_, index) => state.inventory.items[index] || null);
+  $("#inventory-grid").innerHTML = slots.map(item => item
+    ? `<button class="item-slot ${item.instanceId === state.runtime.selectedItemId ? "selected" : ""}" data-item-id="${item.instanceId}" aria-label="${escapeHtml(item.name)}">${itemIcon(item)}${item.qty > 1 ? `<span class="qty">${item.qty}</span>` : ""}</button>`
+    : `<div class="item-slot empty" aria-hidden="true"></div>`).join("");
+  $("#inventory-capacity").textContent = `${state.inventory.items.length} / ${state.inventory.capacity}`;
+  if (!selected) {
+    $("#item-detail").innerHTML = `<p class="muted tiny">No item selected.</p>`;
+    return;
+  }
+  const equipped = Object.values(state.character.equipment).includes(selected.instanceId);
+  $("#item-detail").innerHTML = `<div style="width:90px;margin:auto">${itemIcon(selected)}</div><h4>${escapeHtml(selected.name)}</h4><span class="chip" style="color:${RARITY_COLORS[selected.rarity]}">${selected.rarity.toUpperCase()}</span>${(selected.effects || []).map(effect => `<div class="item-line"><span>${effect.type === "maximum" ? `Maximum ${effect.resource}` : effect.stat}</span><b>+${effect.value}</b></div>`).join("")}<div class="toolbar" style="margin-top:9px"><button class="mini-button" data-equip="${selected.instanceId}" ${selected.slot ? "" : "disabled"}>${equipped ? "Equipped" : "Equip"}</button></div>`;
+}
+
+function renderWorld() {
+  drawWorldMap();
+  drawFirstPerson();
+  const current = terrainAt(state.world.player.x, state.world.player.y) || TERRAIN.grass;
+  const vector = facingVector();
+  const next = terrainAt(state.world.player.x + vector[0], state.world.player.y + vector[1]) || current;
+  $("#world-position").textContent = `${state.world.player.x}, ${state.world.player.y}`;
+  $("#world-terrain").textContent = current.name;
+  $("#world-seed-label").textContent = state.world.seed;
+  $("#current-layer").textContent = `Close: ${current.name} ${terrainVariant(current.key) + 1}`;
+  $("#distant-layer").textContent = `Distant: ${next.name}`;
+  $("#facing-indicator").textContent = state.world.facing[0].toUpperCase();
+  $("#world-seed").value = state.world.seed;
+  $("#world-quality").value = state.settings.worldQuality;
+}
+
+function npcPortrait() {
+  return `<svg viewBox="0 0 180 230" role="img" aria-label="${NPC.name}"><defs><linearGradient id="npc-cloth" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${NPC.palette.cloth}"/><stop offset="1" stop-color="#172735"/></linearGradient></defs><path d="M45 213q4-92 45-102 41 10 45 102z" fill="url(#npc-cloth)"/><ellipse cx="90" cy="78" rx="42" ry="48" fill="${NPC.palette.skin}"/><path d="M49 73q5-54 41-55 37 1 41 55-15-20-41-20-27 0-41 20z" fill="${NPC.palette.hair}"/><path d="M53 51l37-30 37 30-9-35H62z" fill="#465d6c" stroke="${NPC.palette.accent}" stroke-width="3"/><circle cx="75" cy="80" r="4"/><circle cx="105" cy="80" r="4"/><path d="M72 103q18 12 36 0" fill="none" stroke="#764943" stroke-width="4" stroke-linecap="round"/><path d="M59 125l31 29 31-29" fill="none" stroke="${NPC.palette.accent}" stroke-width="6"/></svg>`;
+}
+
+function renderNarrative() {
+  $("#npc-card").innerHTML = `${npcPortrait()}<h4>${NPC.name}</h4><p class="muted tiny">${NPC.role}<br>${NPC.faction}</p><span class="chip">Reputation ${state.factions.wardens}</span>`;
+  const node = DIALOGUE[state.dialogue.node];
+  $("#dialogue-box").innerHTML = `<p>${escapeHtml(node.line)}</p><div class="choice-list">${node.choices.map((choice, index) => `<button class="choice-button" data-dialogue-index="${index}">${escapeHtml(choice.text)}<small>Leads to ${choice.to}</small></button>`).join("")}</div>`;
+  const definition = QUESTS.moonfen;
+  const questState = state.quests.moonfen;
+  const objectives = definition.objectives.map(objective => {
+    const value = questState.progress[objective.id] || 0;
+    const done = value >= objective.target;
+    return `<div class="test-result ${done ? "pass" : "pending"}"><span>${done ? "✓" : "○"}</span><span>${objective.label}</span><b>${value}/${objective.target}</b></div>`;
+  }).join("");
+  $("#quest-panel").innerHTML = `<div class="toolbar"><h4 style="margin:0">${definition.title}</h4><span class="chip ${questState.status === "done" ? "good" : questState.status === "active" ? "info" : "warn"}">${questState.status}</span></div><p class="tiny muted">${definition.description}</p>${objectives}${questState.status === "inactive" ? `<button class="mini-button" data-start-quest="moonfen" style="margin-top:8px">Start quest</button>` : ""}`;
+}
+
+function formationPosition(id) {
+  const slot = state.party.formation[id] ?? 4;
+  return { column: slot % 3, row: Math.floor(slot / 3) };
+}
+
+function combatantPosition(unit, enemyIndex) {
+  if (unit.team === "party") {
+    const position = formationPosition(unit.id);
+    return {
+      x: `${15 + position.column * 10}%`,
+      y: `${30 + position.row * 23}%`,
+      scale: 1 - position.row * .07
+    };
+  }
+  return {
+    x: `${77 + (enemyIndex % 2) * 10}%`,
+    y: `${29 + enemyIndex * 22}%`,
+    scale: 1 - enemyIndex * .04
+  };
+}
+
+function unitSvg(unit) {
+  if (unit.team === "party") {
+    return `<svg viewBox="0 0 80 90" aria-hidden="true"><circle cx="40" cy="22" r="14" fill="${unit.color}"/><path d="M24 39q16-12 32 0l9 35H15z" fill="${unit.color}" stroke="#d8e2eb" stroke-width="2"/><path d="M15 74h50" stroke="#151d27" stroke-width="8"/></svg>`;
+  }
+  return `<svg viewBox="0 0 80 90" aria-hidden="true"><path d="M14 58q5-37 26-43 23 6 26 43l-12 21H26z" fill="${unit.color}" stroke="#1a1116" stroke-width="3"/><circle cx="31" cy="42" r="5" fill="#ffe39b"/><circle cx="50" cy="42" r="5" fill="#ffe39b"/><path d="M27 59l13 8 14-8" fill="none" stroke="#fff" stroke-width="3"/></svg>`;
+}
+
+function renderCombat() {
+  if (!state.combat.active) startCombat(hashString(`${state.world.seed}:showroom`));
+  const actor = activeUnit();
+  const pending = state.combat.pending;
+  let enemyIndex = 0;
+  $("#battlefield").innerHTML = state.combat.units.map(unit => {
+    const position = combatantPosition(unit, unit.team === "enemy" ? enemyIndex++ : 0);
+    const valid = pending?.validTargets.includes(unit.id);
+    const invalid = pending && !valid;
+    return `<button class="combatant ${unit.id === actor?.id ? "active-turn" : ""} ${valid ? "valid-target" : ""} ${invalid ? "invalid-target" : ""} ${unit.hp <= 0 ? "defeated" : ""}" data-unit-id="${unit.id}" style="--x:${position.x};--y:${position.y};--scale:${position.scale}" aria-label="${unit.name}, ${unit.hp} health">${unitSvg(unit)}<span class="combatant-name">${unit.name}</span><span class="hp-line"><span style="--hp:${clamp(unit.hp / unit.maxHp * 100, 0, 100)}%"></span></span></button>`;
+  }).join("");
+  $("#turn-order").innerHTML = state.combat.queue.map((id, index) => {
+    const unit = state.combat.units.find(entry => entry.id === id);
+    return `<div class="turn-card ${index === state.combat.index ? "active" : ""}"><b>${unit?.name || id}</b><br>${unit?.team || ""}</div>`;
+  }).join("");
+  $("#combat-round").textContent = `Round ${state.combat.round}`;
+  $("#active-actor").textContent = actor ? `${actor.name}'s turn` : "No actor";
+  $("#target-mode").textContent = pending ? `Target: ${ABILITIES[pending.abilityId].name}` : "Command mode";
+  $("#combat-seed-label").textContent = `Seed ${state.combat.seed}`;
+  $("#cancel-target").disabled = !pending;
+  $("#combat-log").textContent = state.combat.log.slice(-10).join("\n");
+  if (!actor || actor.team !== "party" || state.combat.busy || state.combat.result) {
+    $("#command-grid").innerHTML = state.combat.result ? `<div class="panel"><b>${state.combat.result.toUpperCase()}</b></div>` : `<div class="panel"><span class="muted tiny">Enemy action resolving…</span></div>`;
+    return;
+  }
+  $("#command-grid").innerHTML = actor.abilities.map(id => {
+    const ability = ABILITIES[id];
+    const usable = canUseAbility(actor, ability);
+    const cost = ability.resource === "mana" ? `${ability.cost} MP` : ability.resource === "item" ? `${ability.cost} item` : "Free";
+    return `<button class="command-button" data-ability-id="${id}" ${usable ? "" : "disabled"}><b>${ability.name}</b><small>${cost} · ${ability.description}</small></button>`;
+  }).join("");
+}
+
+function renderSaveSystem() {
+  $("#save-slots").innerHTML = [1, 2, 3].map(index => {
+    const raw = storageGet(saveKey(index));
+    const payload = safeJsonParse(raw);
+    const valid = validateSavePayload(payload).valid;
+    const subtitle = valid ? `${payload.kind} · ${new Date(payload.savedAt).toLocaleString()}` : raw ? "Invalid save" : "Empty slot";
+    return `<section class="save-slot"><h4>Slot ${index}</h4><p>${subtitle}</p><div class="toolbar" style="margin-top:7px"><button class="mini-button" data-save-slot="${index}">Save</button><button class="mini-button" data-load-slot="${index}" ${valid ? "" : "disabled"}>Load</button><button class="mini-button" data-delete-slot="${index}" ${raw ? "" : "disabled"}>Clear</button></div></section>`;
+  }).join("");
+  $("#autosave-status").textContent = state.runtime.lastAutosaveAt ? `Autosaved ${new Date(state.runtime.lastAutosaveAt).toLocaleTimeString()}` : "Autosave ready";
+  inspectRecovery();
+}
+
+function renderBindings() {
+  const labels = {
+    moveNorth: "Move north",
+    moveSouth: "Move south",
+    moveWest: "Move west",
+    moveEast: "Move east",
+    quickSave: "Quick save",
+    openInventory: "Open inventory",
+    confirm: "Confirm target",
+    cancel: "Cancel"
+  };
+  $("#binding-list").innerHTML = Object.entries(state.settings.bindings).map(([action, code]) => `<div class="binding-row"><span>${labels[action]}</span><kbd>${code}</kbd><button class="mini-button" data-rebind="${action}">${state.runtime.rebindingAction === action ? "Press key…" : "Rebind"}</button></div>`).join("");
+  const values = Object.values(state.settings.bindings);
+  const unique = values.length === new Set(values).size;
+  $("#binding-status").textContent = unique ? "No conflicts" : "Binding conflict";
+  $("#binding-status").className = `chip ${unique ? "good" : "bad"}`;
+}
+
+function renderAudio() {
+  updateAudioGains();
+  $("#audio-level").style.setProperty("--level", `${clamp(audio.level * 500, 0, 100)}%`);
+  $("#toggle-mute").textContent = state.settings.audio.muted ? "Unmute" : "Mute";
+}
+
+function renderTests() {
+  const results = state.testResults;
+  const passes = results.filter(result => result.status === "pass").length;
+  const failures = results.filter(result => result.status === "fail").length;
+  const totalTime = results.reduce((sum, result) => sum + result.duration, 0);
+  $("#test-total").textContent = results.length;
+  $("#test-pass").textContent = passes;
+  $("#test-fail").textContent = failures;
+  $("#test-time").textContent = `${totalTime.toFixed(1)}ms`;
+  $("#test-list").innerHTML = results.length ? results.map(result => `<div class="test-result ${result.status}"><span>${result.status === "pass" ? "✓" : result.status === "fail" ? "✕" : "…"}</span><span>${escapeHtml(result.name)}${result.error ? `<small>${escapeHtml(result.error)}</small>` : ""}</span><b>${result.duration.toFixed(2)}ms</b></div>`).join("") : `<p class="muted tiny">Run the deterministic suite to populate results.</p>`;
+  $("#hero-tests").textContent = `${passes}/${results.length || TESTS.length}`;
+}
+
+function renderProfiler() {
+  $("#profiler-fps").textContent = Math.round(profiler.fps);
+  $("#profiler-frame").textContent = profiler.frameMs.toFixed(1);
+  $("#profiler-renders").textContent = state.meta.renderCount;
+  $("#profiler-quality").textContent = state.runtime.qualityTier.toUpperCase();
+  $("#hero-fps").textContent = Math.round(profiler.fps);
+  $("#long-frame-count").textContent = `${state.runtime.longFrames} long frames`;
+  $("#toggle-adaptive-quality").textContent = `Adaptive: ${state.settings.adaptiveQuality ? "On" : "Off"}`;
+  drawProfiler();
+}
+
+function renderSources() {
+  const selected = SOURCE_COMPONENTS[state.runtime.selectedSourceId] || SOURCE_COMPONENTS["resource-hud"];
+  $("#source-list").innerHTML = Object.entries(SOURCE_COMPONENTS).map(([id, component]) => `<button class="source-choice ${id === state.runtime.selectedSourceId ? "active" : ""}" data-source-id="${id}"><b>${component.name}</b></button>`).join("");
+  $("#source-description").textContent = selected.description;
+  $("#source-viewer").textContent = selected.build();
+}
+
+function renderInspector() {
+  $("#state-inspector").textContent = JSON.stringify({
+    schemaVersion: state.version,
+    build: state.meta.build,
+    character: {
+      name: state.character.name,
+      classId: state.character.classId,
+      level: state.character.level,
+      xp: state.character.xp,
+      resources: state.character.resources,
+      derived: derivedCharacter().stats,
+      equipment: state.character.equipment
+    },
+    world: {
+      seed: state.world.seed,
+      player: state.world.player,
+      facing: state.world.facing,
+      steps: state.world.steps,
+      discovered: state.world.discovered
+    },
+    quest: state.quests.moonfen,
+    combat: {
+      active: state.combat.active,
+      result: state.combat.result,
+      round: state.combat.round,
+      pending: state.combat.pending
+    },
+    settings: state.settings,
+    production: {
+      autosave: state.runtime.lastAutosaveAt,
+      checkpoint: state.runtime.lastCheckpointAt,
+      recoveryAvailable: state.runtime.recoveryAvailable,
+      qualityTier: state.runtime.qualityTier,
+      longFrames: state.runtime.longFrames,
+      tests: state.testResults
+    },
+    recentEvents: state.telemetry.slice(-12)
+  }, null, 2);
+}
+
+function renderAll() {
+  state.meta.renderCount += 1;
+  renderCharacter();
+  renderInventory();
+  renderWorld();
+  renderNarrative();
+  renderCombat();
+  renderSaveSystem();
+  applySettings();
+  renderBindings();
+  renderAudio();
+  renderTests();
+  renderProfiler();
+  renderSources();
+  renderInspector();
+}
+
+/* ========================================================================== */
+/* EVENT-DRIVEN PRESENTATION AND QUEST CONNECTIVITY                            */
+/* ========================================================================== */
+
+subscribe(event => {
+  processQuestEvent(event);
+  if (event.type === "DAMAGE_DEALT") {
+    playSound("attack");
+    flashScreen("#f06773");
+    haptic([8, 20, 8]);
+  }
+  if (event.type === "HEAL_APPLIED") {
+    playSound("heal");
+    flashScreen("#63dfa0");
+  }
+  if (event.type === "COMBAT_VICTORY") {
+    playSound("victory");
+    flashScreen("#f1c75b");
+    grantXp(120, []);
+    dispatch("ADD_ITEM", { item: generateItem(`victory:${state.combat.seed}`), quantity: 1 });
+    announce("Combat victory. Rewards added.");
+  }
+  if (event.type === "CHARACTER_LEVEL_UP") announce(`Level ${event.payload.level} reached`);
+  if (event.type === "QUEST_COMPLETED") announce(`${event.payload.title} completed`);
+});
+
+/* ========================================================================== */
+/* INPUT ROUTING                                                              */
+/* ========================================================================== */
+
+document.addEventListener("click", event => {
+  const jump = event.target.closest("[data-jump]");
+  if (jump) document.getElementById(jump.dataset.jump)?.scrollIntoView({ behavior: state.settings.motion === "reduced" ? "auto" : "smooth", block: "start" });
+
+  const item = event.target.closest("[data-item-id]");
+  if (item) {
+    state.runtime.selectedItemId = item.dataset.itemId;
+    renderInventory();
+  }
+
+  const equip = event.target.closest("[data-equip]");
+  if (equip) dispatch("EQUIP_ITEM", { instanceId: equip.dataset.equip });
+
+  const move = event.target.closest("[data-move]");
+  if (move) {
+    const vector = { north: [0, -1], south: [0, 1], west: [-1, 0], east: [1, 0] }[move.dataset.move];
+    dispatch("MOVE_WORLD", { dx: vector[0], dy: vector[1] });
+  }
+
+  const dialogue = event.target.closest("[data-dialogue-index]");
+  if (dialogue) dispatch("DIALOGUE_CHOICE", { index: Number(dialogue.dataset.dialogueIndex) });
+
+  const quest = event.target.closest("[data-start-quest]");
+  if (quest) dispatch("START_QUEST", { id: quest.dataset.startQuest });
+
+  const ability = event.target.closest("[data-ability-id]");
+  if (ability) dispatch("CHOOSE_ABILITY", { id: ability.dataset.abilityId });
+
+  const target = event.target.closest(".valid-target[data-unit-id]");
+  if (target) dispatch("SELECT_TARGET", { id: target.dataset.unitId });
+
+  const save = event.target.closest("[data-save-slot]");
+  if (save) saveSlot(Number(save.dataset.saveSlot));
+
+  const load = event.target.closest("[data-load-slot]");
+  if (load) loadStored(saveKey(Number(load.dataset.loadSlot)), `Slot ${load.dataset.loadSlot}`);
+
+  const remove = event.target.closest("[data-delete-slot]");
+  if (remove) {
+    storageDelete(saveKey(Number(remove.dataset.deleteSlot)));
+    renderSaveSystem();
+  }
+
+  const rebind = event.target.closest("[data-rebind]");
+  if (rebind) {
+    state.runtime.rebindingAction = rebind.dataset.rebind;
+    showToast(`Press a key for ${titleCase(state.runtime.rebindingAction)}`);
+    renderBindings();
+  }
+
+  const sound = event.target.closest("[data-sound]");
+  if (sound) playSound(sound.dataset.sound);
+
+  const source = event.target.closest("[data-source-id]");
+  if (source) {
+    state.runtime.selectedSourceId = source.dataset.sourceId;
+    renderSources();
+  }
+
+  const demo = event.target.closest("[data-demo]");
+  if (demo) {
+    if (demo.dataset.demo === "damage") dispatch("CHANGE_RESOURCE", { key: "health", amount: -18 });
+    if (demo.dataset.demo === "cast") {
+      dispatch("CHANGE_RESOURCE", { key: "mana", amount: -12 });
+      dispatch("CHANGE_RESOURCE", { key: "stamina", amount: -7 });
+    }
+    if (demo.dataset.demo === "rest") dispatch("REST_PARTY");
+    if (demo.dataset.demo === "level") dispatch("GAIN_XP", { amount: 72 });
+  }
+});
+
+document.addEventListener("keydown", event => {
+  if (state.runtime.rebindingAction) {
+    event.preventDefault();
+    dispatch("SET_BINDING", { action: state.runtime.rebindingAction, code: event.code });
+    return;
+  }
+  if (event.metaKey || event.ctrlKey || event.altKey || /INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName || "")) return;
+  const action = Object.entries(state.settings.bindings).find(([, code]) => code === event.code)?.[0];
+  if (action) {
+    event.preventDefault();
+    executeAction(action);
+  }
+});
+
+$("#quick-save").addEventListener("click", () => saveSlot(0, "quick"));
+$("#open-settings").addEventListener("click", () => $("#production").scrollIntoView({ behavior: state.settings.motion === "reduced" ? "auto" : "smooth" }));
+$("#run-smoke-tests").addEventListener("click", () => runTests());
+$("#run-all-tests").addEventListener("click", () => runTests());
+$("#run-combat-test").addEventListener("click", () => runTests("combat"));
+$("#run-save-test").addEventListener("click", () => runTests("save"));
+$("#regenerate-character").addEventListener("click", () => {
+  const seed = $("#character-seed").value || `HERO-${Date.now()}`;
+  const random = seededRandom(hashString(seed));
+  state.character.seed = seed;
+  state.character.name = `${choose(["Aven", "Lyra", "Tor", "Mara", "Orin", "Serin"], random)} ${choose(["Vale", "Ash", "Moon", "Verge", "Ward"], random)}`;
+  state.character.skin = choose(["#d19a78", "#9a684f", "#e0b38d", "#704838"], random);
+  state.character.hair = choose(["#2d2429", "#584337", "#c4a16f", "#15191e"], random);
+  dispatch("SET_CHARACTER_COLORS", { skin: state.character.skin, hair: state.character.hair });
+});
+$("#character-class").addEventListener("change", event => dispatch("SET_CHARACTER_CLASS", { classId: event.target.value }));
+$("#skin-color").addEventListener("input", event => dispatch("SET_CHARACTER_COLORS", { skin: event.target.value }));
+$("#hair-color").addEventListener("input", event => dispatch("SET_CHARACTER_COLORS", { hair: event.target.value }));
+$("#cycle-weapon").addEventListener("click", () => {
+  const order = ["sword", "staff", "bow"];
+  state.character.weaponVisual = order[(order.indexOf(state.character.weaponVisual) + 1) % order.length];
+  showToast(`${titleCase(state.character.weaponVisual)} visual selected`);
+  markAutosaveDirty("VISUAL");
+});
+$("#toggle-helmet").addEventListener("click", () => { state.character.helmetVisible = !state.character.helmetVisible; markAutosaveDirty("VISUAL"); renderCharacter(); });
+$("#toggle-shield").addEventListener("click", () => { state.character.shieldVisible = !state.character.shieldVisible; markAutosaveDirty("VISUAL"); renderCharacter(); });
+$("#generate-item").addEventListener("click", () => dispatch("ADD_ITEM", { item: generateItem(`${state.world.seed}:${state.meta.uid}`), quantity: 1 }));
+$("#sort-inventory").addEventListener("click", () => dispatch("SORT_INVENTORY"));
+$("#generate-world").addEventListener("click", () => dispatch("GENERATE_WORLD", { seed: $("#world-seed").value.trim() || "EMBER-7451" }));
+$("#gather-terrain").addEventListener("click", () => dispatch("GATHER_TERRAIN"));
+$("#world-quality").addEventListener("change", event => {
+  state.settings.worldQuality = event.target.value;
+  if (event.target.value !== "auto") state.runtime.qualityTier = event.target.value;
+  resizeAllCanvases();
+  markAutosaveDirty("SET_SETTING");
+});
+$("#cancel-target").addEventListener("click", () => dispatch("CANCEL_TARGET"));
+$("#reset-combat").addEventListener("click", () => dispatch("START_COMBAT", { seed: hashString(`${state.world.seed}:${Date.now()}`) }));
+$("#auto-turn").addEventListener("click", () => {
+  const actor = activeUnit();
+  if (!actor || actor.team !== "party" || state.combat.busy) return;
+  const ability = actor.abilities.map(id => ABILITIES[id]).find(entry => canUseAbility(actor, entry));
+  if (!ability) return;
+  dispatch("CHOOSE_ABILITY", { id: ability.id });
+  if (state.combat.pending) dispatch("SELECT_TARGET", { id: state.combat.pending.validTargets[0] });
+});
+$("#create-checkpoint").addEventListener("click", createCheckpoint);
+$("#simulate-crash").addEventListener("click", () => {
+  const autosave = storageGet(AUTOSAVE_KEY) || JSON.stringify(makeSavePayload("simulated-recovery"));
+  storageSet(RECOVERY_KEY, autosave);
+  inspectRecovery();
+  showToast("Recovery snapshot staged");
+});
+$("#restore-recovery").addEventListener("click", () => loadStored(RECOVERY_KEY, "Recovery"));
+$("#dismiss-recovery").addEventListener("click", () => { storageDelete(RECOVERY_KEY); inspectRecovery(); });
+$("#font-scale").addEventListener("input", event => dispatch("SET_SETTING", { key: "fontScale", value: Number(event.target.value) }));
+$("#color-palette").addEventListener("change", event => dispatch("SET_SETTING", { key: "palette", value: event.target.value }));
+$("#high-contrast").addEventListener("change", event => dispatch("SET_SETTING", { key: "contrast", value: event.target.checked ? "high" : "normal" }));
+$("#reduced-motion").addEventListener("change", event => dispatch("SET_SETTING", { key: "motion", value: event.target.checked ? "reduced" : "full" }));
+$("#reduced-flashes").addEventListener("change", event => dispatch("SET_SETTING", { key: "flashes", value: event.target.checked ? "reduced" : "full" }));
+$("#haptics-enabled").addEventListener("change", event => dispatch("SET_SETTING", { key: "haptics", value: event.target.checked }));
+$("#captions-enabled").addEventListener("change", event => dispatch("SET_SETTING", { key: "captions", value: event.target.checked }));
+$("#announcements-enabled").addEventListener("change", event => dispatch("SET_SETTING", { key: "announcements", value: event.target.checked }));
+$("#announce-test").addEventListener("click", () => announce("Accessibility announcement test successful", true));
+$("#flash-test").addEventListener("click", () => flashScreen("#65dcec"));
+$("#reset-accessibility").addEventListener("click", () => {
+  const defaults = createInitialState().settings;
+  state.settings = { ...state.settings, fontScale: defaults.fontScale, contrast: defaults.contrast, motion: defaults.motion, flashes: defaults.flashes, palette: defaults.palette, haptics: defaults.haptics, captions: defaults.captions, announcements: defaults.announcements };
+  applySettings();
+  markAutosaveDirty("SET_SETTING");
+});
+$("#reset-bindings").addEventListener("click", () => { state.settings.bindings = clone(DEFAULT_BINDINGS); state.runtime.rebindingAction = null; renderBindings(); markAutosaveDirty("SET_BINDING"); });
+for (const [id, key] of [["master-volume", "master"], ["music-volume", "music"], ["sfx-volume", "sfx"], ["ui-volume", "ui"]]) {
+  $("#" + id).addEventListener("input", event => dispatch("SET_SETTING", { key: `audio.${key}`, value: Number(event.target.value) / 100 }));
+}
+$("#toggle-mute").addEventListener("click", () => dispatch("SET_SETTING", { key: "audio.muted", value: !state.settings.audio.muted }));
+$("#toggle-adaptive-quality").addEventListener("click", () => dispatch("SET_SETTING", { key: "adaptiveQuality", value: !state.settings.adaptiveQuality }));
+$("#stress-test").addEventListener("click", runStressPulse);
+$("#copy-source").addEventListener("click", () => copyText(SOURCE_COMPONENTS[state.runtime.selectedSourceId].build()));
+$("#download-source").addEventListener("click", () => downloadText(`forge-${state.runtime.selectedSourceId}.html`, SOURCE_COMPONENTS[state.runtime.selectedSourceId].build(), "text/html"));
+
+/* ========================================================================== */
+/* LIFECYCLE                                                                  */
+/* ========================================================================== */
+
+function resizeAllCanvases() {
+  resizeCanvas($("#world-map"), "map");
+  resizeCanvas($("#first-person-view"), "view");
+  resizeProfiler();
+  centerMapCamera();
+  renderWorld();
+  renderProfiler();
+}
+
+new ResizeObserver(() => resizeAllCanvases()).observe($("#map-stage"));
+new ResizeObserver(() => resizeAllCanvases()).observe($("#first-person-stage"));
+new ResizeObserver(() => resizeProfiler()).observe($("#profiler-canvas").parentElement);
+
+let animationHandle = 0;
+
+function animationFrame(timestamp) {
+  recordFrame(timestamp);
+  const delta = clamp((timestamp - (animationFrame.last || timestamp)) / 1000, 0, .05);
+  animationFrame.last = timestamp;
+  worldRuntime.time += delta;
+  worldRuntime.transition = Math.max(0, worldRuntime.transition - delta * 2.5);
+  audio.level = Math.max(0, audio.level - delta * .55);
+  stressWork();
+  if (!document.hidden) {
+    drawFirstPerson();
+    renderAudio();
+    renderProfiler();
+  }
+  animationHandle = requestAnimationFrame(animationFrame);
+}
+
+window.addEventListener("pagehide", () => {
+  cancelAnimationFrame(animationHandle);
+  if (state.runtime.autosaveDirty) saveSlot(0, "pagehide");
+});
+
+window.addEventListener("pageshow", () => {
+  cancelAnimationFrame(animationHandle);
+  profiler.lastTimestamp = performance.now();
+  animationHandle = requestAnimationFrame(animationFrame);
+  inspectRecovery();
+});
+
+/* ========================================================================== */
+/* BOOT                                                                       */
+/* ========================================================================== */
+
+function seedInitialInventory() {
+  const events = [];
+  addItem({
+    definitionId: "health-tonic",
+    type: "potion",
+    name: "Health Tonic",
+    rarity: "uncommon",
+    value: 28,
+    effects: [{ type: "heal", amount: 35 }],
+    palette: { main: "#6a3f48", highlight: "#f06773", gem: "#ffe39b" }
+  }, 3, events);
+  const startingWeapon = {
+    definitionId: "aetherblade",
+    type: "sword",
+    slot: "weapon",
+    name: "Aetherblade",
+    rarity: "rare",
+    value: 180,
+    effects: [{ type: "stat", stat: "power", value: 12 }],
+    palette: { main: "#486579", highlight: "#65dcec", gem: "#b38dff" }
+  };
+  addItem(startingWeapon, 1, events);
+  const weapon = state.inventory.items.find(item => item.definitionId === "aetherblade");
+  state.character.equipment.weapon = weapon?.instanceId || null;
+  events.forEach(publish);
+}
+
+function boot() {
+  const storedSettings = safeJsonParse(storageGet(`${STORAGE_PREFIX}:settings`));
+  if (storedSettings) state.settings = { ...state.settings, ...storedSettings, audio: { ...state.settings.audio, ...(storedSettings.audio || {}) }, bindings: { ...state.settings.bindings, ...(storedSettings.bindings || {}) } };
+  seedInitialInventory();
+  generateWorld(state.world.seed);
+  startCombat(hashString(`${state.world.seed}:showroom`));
+  applySettings();
+  resizeAllCanvases();
+  renderAll();
+  inspectRecovery();
+  animationHandle = requestAnimationFrame(animationFrame);
+  setTimeout(() => scheduleAutosave(300), 300);
+}
+
+subscribe(event => {
+  if (event.type === "SETTING_CHANGED") storageSet(`${STORAGE_PREFIX}:settings`, JSON.stringify(state.settings));
+});
+
+boot();
+</script>
+</body>
+</html>
