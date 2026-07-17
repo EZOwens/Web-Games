@@ -1,7 +1,7 @@
 name: Finalize FORGE Milestone 5
 
 on:
-  push:
+  pull_request:
     paths:
       - '.github/forge-m5-trigger.txt'
 
@@ -12,15 +12,16 @@ jobs:
   finalize:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out repository
+      - name: Check out source branch
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
 
       - name: Build audited final showroom
         shell: bash
         run: |
           python - <<'PY'
           from pathlib import Path
-          import re
 
           source_path = Path('showcases/forge-rpg-studio-milestone-5.html')
           target_path = Path('showcases/forge-rpg-studio-milestone-5-final.html')
@@ -62,7 +63,7 @@ jobs:
       </div>
     </article>'''
           if source_close not in text:
-              raise SystemExit('Could not locate exhibit 12/13 merge boundary')
+              raise SystemExit('Could not locate exhibit merge boundary')
           text = text.replace(source_close, source_merge)
 
           marker = 'function resolveAbility(actor, ability, targetId, events, sourceCombat = state.combat) {'
@@ -100,17 +101,13 @@ jobs:
     announce("Combat victory. Rewards added.");
   }'''
           if old_victory not in text:
-              raise SystemExit('Could not locate combat victory subscriber')
+              raise SystemExit('Could not locate victory reward block')
           text = text.replace(old_victory, new_victory)
 
-          old_frame_prelude = '''let animationHandle = 0;
-
-function animationFrame(timestamp) {'''
-          new_frame_prelude = '''let animationHandle = 0;
-let productionUiAccumulator = 0;
-
-function animationFrame(timestamp) {'''
-          text = text.replace(old_frame_prelude, new_frame_prelude)
+          text = text.replace(
+              'let animationHandle = 0;\n\nfunction animationFrame(timestamp) {',
+              'let animationHandle = 0;\nlet productionUiAccumulator = 0;\n\nfunction animationFrame(timestamp) {'
+          )
 
           old_frame = '''  worldRuntime.time += delta;
   worldRuntime.transition = Math.max(0, worldRuntime.transition - delta * 2.5);
@@ -137,22 +134,17 @@ function animationFrame(timestamp) {'''
   }
   animationHandle = requestAnimationFrame(animationFrame);'''
           if old_frame not in text:
-              raise SystemExit('Could not locate animation frame body')
+              raise SystemExit('Could not locate frame loop')
           text = text.replace(old_frame, new_frame)
 
           text = text.replace(
-              'const random = seededRandom(sourceCombat.seed + sourceCombat.round * 101 + sourceCombat.index * 17 + hashString(ability.id));\n',
+              '  const random = seededRandom(sourceCombat.seed + sourceCombat.round * 101 + sourceCombat.index * 17 + hashString(ability.id));\n',
               ''
           )
 
-          text = text.replace(
-              '  const localState = clone(state);\n  const previousState = state;\n  state = localState;',
-              '  const localState = clone(state);\n  const previousState = state;\n  state = localState;',
-              1
-          )
-
-          if text.count('class="exhibit-num"') != 12:
-              raise SystemExit(f'Expected 12 exhibits, found {text.count(chr(99)+chr(108)+chr(97)+chr(115)+chr(115)+chr(61)+chr(34)+chr(101)+chr(120)+chr(104)+chr(105)+chr(98)+chr(105)+chr(116)+chr(45)+chr(110)+chr(117)+chr(109)+chr(34))}')
+          exhibit_count = text.count('class="exhibit-num"')
+          if exhibit_count != 12:
+              raise SystemExit(f'Expected 12 exhibits, found {exhibit_count}')
           if 'combatSimulationMode = false;' not in text:
               raise SystemExit('Simulation guard missing')
           if 'productionUiAccumulator >= .2' not in text:
@@ -164,7 +156,7 @@ function animationFrame(timestamp) {'''
           print(f'Wrote {target_path} with {text.count(chr(10)) + 1} lines')
           PY
 
-      - name: Commit final showroom
+      - name: Commit final showroom to source branch
         shell: bash
         run: |
           git config user.name "FORGE Build Bot"
@@ -174,5 +166,5 @@ function animationFrame(timestamp) {'''
             echo "No finalization changes required"
           else
             git commit -m "Finalize FORGE RPG Studio Milestone 5"
-            git push
+            git push origin HEAD:${{ github.head_ref }}
           fi
