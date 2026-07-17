@@ -1,0 +1,4958 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#070a0f">
+<title>FORGE RPG Studio — Milestone 3</title>
+<style>
+/* ========================================================================== */
+/* FORGE RPG STUDIO — MILESTONE 3                                             */
+/* Connected world, persistent exploration, NPCs, encounters, and interiors.  */
+/* ========================================================================== */
+
+:root{
+  --bg:#070a0f;
+  --panel:#0d1621;
+  --panel2:#121e2c;
+  --panel3:#182839;
+  --line:#293d50;
+  --line2:#405a70;
+  --text:#f5f1e8;
+  --soft:#d8e2eb;
+  --muted:#93a3b4;
+  --gold:#f1c75b;
+  --gold2:#ffe39b;
+  --cyan:#65dcec;
+  --green:#63dfa0;
+  --red:#f06773;
+  --violet:#b38dff;
+  --orange:#ff9a58;
+  --blue:#7496ff;
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+  --ease:cubic-bezier(.2,.8,.2,1);
+  --spring:cubic-bezier(.15,1.2,.32,1);
+}
+
+*{
+  box-sizing:border-box;
+}
+
+html{
+  min-width:320px;
+  scroll-behavior:smooth;
+  background:var(--bg);
+}
+
+body{
+  margin:0;
+  min-width:320px;
+  min-height:100vh;
+  color:var(--text);
+  background:
+    radial-gradient(circle at 12% 0%,rgba(101,220,236,.08),transparent 28rem),
+    radial-gradient(circle at 90% 12%,rgba(241,199,91,.08),transparent 30rem),
+    linear-gradient(180deg,#080b11,#06080c 52%,#090d13);
+  font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  overflow-x:hidden;
+  -webkit-tap-highlight-color:transparent;
+}
+
+button,
+input,
+select,
+textarea{
+  font:inherit;
+}
+
+button{
+  color:inherit;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible{
+  outline:2px solid var(--gold2);
+  outline-offset:3px;
+}
+
+.visually-hidden{
+  position:absolute;
+  width:1px;
+  height:1px;
+  padding:0;
+  margin:-1px;
+  overflow:hidden;
+  clip:rect(0 0 0 0);
+  white-space:nowrap;
+  border:0;
+}
+
+/* ========================================================================== */
+/* AMBIENT BACKDROP                                                           */
+/* ========================================================================== */
+
+#ambient-canvas{
+  position:fixed;
+  inset:0;
+  z-index:-2;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+}
+
+.ambient-vignette{
+  position:fixed;
+  inset:0;
+  z-index:-1;
+  pointer-events:none;
+  background:
+    linear-gradient(90deg,rgba(0,0,0,.3),transparent 15%,transparent 85%,rgba(0,0,0,.3)),
+    linear-gradient(180deg,transparent 56%,rgba(0,0,0,.38));
+}
+
+/* ========================================================================== */
+/* SHOWROOM SHELL                                                             */
+/* ========================================================================== */
+
+.topbar{
+  position:sticky;
+  top:0;
+  z-index:90;
+  min-height:74px;
+  padding:calc(8px + var(--safe-top)) 14px 8px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  border-bottom:1px solid rgba(255,255,255,.07);
+  background:rgba(7,10,15,.92);
+  backdrop-filter:blur(18px) saturate(120%);
+}
+
+.brand{
+  min-width:0;
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.brand-mark{
+  position:relative;
+  width:50px;
+  height:50px;
+  flex:0 0 50px;
+  display:grid;
+  place-items:center;
+  border:1px solid rgba(241,199,91,.55);
+  border-radius:16px;
+  background:
+    radial-gradient(circle at 50% 56%,rgba(255,227,155,.9) 0 5px,transparent 6px),
+    linear-gradient(145deg,rgba(241,199,91,.14),rgba(101,220,236,.04));
+  box-shadow:0 0 26px rgba(241,199,91,.09),inset 0 0 18px rgba(255,255,255,.03);
+}
+
+.brand-mark::before,
+.brand-mark::after{
+  content:"";
+  position:absolute;
+  width:22px;
+  height:1px;
+  background:var(--gold);
+}
+
+.brand-mark::before{
+  transform:translateY(-14px) scaleX(.25);
+}
+
+.brand-mark::after{
+  transform:translateY(15px);
+}
+
+.brand-copy{
+  min-width:0;
+}
+
+.brand-copy strong,
+.brand-copy small{
+  display:block;
+}
+
+.brand-copy strong{
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+  font-size:.95rem;
+  letter-spacing:.16em;
+}
+
+.brand-copy small{
+  margin-top:3px;
+  color:var(--muted);
+  font-size:.58rem;
+  letter-spacing:.09em;
+}
+
+.top-actions{
+  display:flex;
+  gap:8px;
+}
+
+.icon-button{
+  width:48px;
+  height:48px;
+  padding:0;
+  display:grid;
+  place-items:center;
+  border:1px solid var(--line);
+  border-radius:16px;
+  background:#111a26;
+  cursor:pointer;
+}
+
+.icon-button:active{
+  transform:scale(.94);
+}
+
+.icon-button svg{
+  width:23px;
+  height:23px;
+}
+
+.hero{
+  width:min(1180px,100%);
+  margin:0 auto;
+  padding:48px 16px 28px;
+}
+
+.hero-grid{
+  display:grid;
+  grid-template-columns:minmax(0,1.15fr) minmax(290px,.85fr);
+  align-items:center;
+  gap:26px;
+}
+
+.kicker{
+  margin:0 0 10px;
+  color:var(--gold2);
+  font-size:.66rem;
+  font-weight:900;
+  letter-spacing:.2em;
+}
+
+.hero h1{
+  margin:0;
+  max-width:780px;
+  font-size:clamp(3rem,8vw,6.7rem);
+  line-height:.84;
+  letter-spacing:-.065em;
+}
+
+.hero h1 span{
+  color:transparent;
+  -webkit-text-stroke:1px rgba(255,255,255,.48);
+}
+
+.hero-lede{
+  max-width:720px;
+  margin:22px 0 0;
+  color:var(--muted);
+  font-size:clamp(.9rem,2vw,1.04rem);
+  line-height:1.7;
+}
+
+.hero-actions{
+  margin-top:22px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:9px;
+}
+
+.primary,
+.secondary,
+.mini{
+  min-height:44px;
+  border-radius:13px;
+  cursor:pointer;
+  font-weight:850;
+  transition:transform .18s var(--spring),border-color .18s ease,background .18s ease;
+}
+
+.primary{
+  padding:10px 15px;
+  border:1px solid var(--gold);
+  color:#171106;
+  background:linear-gradient(180deg,var(--gold2),var(--gold));
+  box-shadow:0 10px 28px rgba(241,199,91,.12);
+}
+
+.secondary,
+.mini{
+  padding:9px 12px;
+  border:1px solid var(--line);
+  background:#121d2a;
+}
+
+.primary:active,
+.secondary:active,
+.mini:active{
+  transform:scale(.96);
+}
+
+.hero-stat-grid{
+  margin-top:24px;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:8px;
+}
+
+.hero-stat{
+  padding:10px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:rgba(14,22,33,.72);
+}
+
+.hero-stat strong,
+.hero-stat small{
+  display:block;
+}
+
+.hero-stat strong{
+  color:var(--gold2);
+  font-size:1rem;
+}
+
+.hero-stat small{
+  margin-top:3px;
+  color:var(--muted);
+  font-size:.55rem;
+}
+
+.hero-visual{
+  min-height:390px;
+  display:grid;
+  place-items:center;
+}
+
+.world-orbit{
+  position:relative;
+  width:min(360px,92vw);
+  aspect-ratio:1;
+  display:grid;
+  place-items:center;
+}
+
+.world-orbit::before,
+.world-orbit::after{
+  content:"";
+  position:absolute;
+  border:1px solid rgba(241,199,91,.18);
+  border-radius:50%;
+}
+
+.world-orbit::before{
+  inset:8%;
+  animation:orbit 23s linear infinite;
+}
+
+.world-orbit::after{
+  inset:24%;
+  border-color:rgba(101,220,236,.2);
+  border-style:dashed;
+  animation:orbit 14s linear infinite reverse;
+}
+
+@keyframes orbit{
+  to{transform:rotate(360deg)}
+}
+
+.world-core{
+  position:relative;
+  z-index:2;
+  width:148px;
+  height:148px;
+  display:grid;
+  place-items:center;
+  border:1px solid rgba(241,199,91,.55);
+  border-radius:38px;
+  background:
+    radial-gradient(circle,rgba(241,199,91,.17),transparent 62%),
+    #101923;
+  box-shadow:0 0 76px rgba(241,199,91,.13);
+}
+
+.world-core svg{
+  width:92px;
+  height:92px;
+}
+
+.orbit-chip{
+  position:absolute;
+  z-index:3;
+  width:88px;
+  min-height:54px;
+  padding:7px;
+  display:grid;
+  place-items:center;
+  border:1px solid var(--line);
+  border-radius:14px;
+  color:var(--chip);
+  background:#111b27;
+  font-size:.6rem;
+  font-weight:900;
+  text-align:center;
+  box-shadow:0 10px 24px rgba(0,0,0,.24);
+}
+
+.orbit-chip:nth-child(2){left:1%;top:42%;--chip:var(--cyan)}
+.orbit-chip:nth-child(3){right:1%;top:42%;--chip:var(--red)}
+.orbit-chip:nth-child(4){top:3%;left:50%;transform:translateX(-50%);--chip:var(--green)}
+.orbit-chip:nth-child(5){bottom:3%;left:50%;transform:translateX(-50%);--chip:var(--violet)}
+
+.chapter-nav{
+  width:min(1180px,calc(100% - 24px));
+  margin:0 auto 18px;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:8px;
+}
+
+.chapter-nav button{
+  min-height:68px;
+  padding:10px 12px;
+  text-align:left;
+  border:1px solid var(--line);
+  border-radius:16px;
+  background:#101a26;
+  cursor:pointer;
+}
+
+.chapter-nav b,
+.chapter-nav small{
+  display:block;
+}
+
+.chapter-nav b{
+  color:var(--gold2);
+  font-size:.7rem;
+}
+
+.chapter-nav small{
+  margin-top:4px;
+  color:var(--muted);
+  font-size:.55rem;
+}
+
+main{
+  width:min(1180px,calc(100% - 24px));
+  margin:0 auto;
+  padding-bottom:110px;
+}
+
+.chapter{
+  scroll-margin-top:90px;
+  margin-top:34px;
+}
+
+.chapter-head{
+  margin-bottom:14px;
+  display:flex;
+  align-items:end;
+  justify-content:space-between;
+  gap:18px;
+}
+
+.chapter-head h2{
+  margin:0;
+  font-size:clamp(1.7rem,4vw,2.8rem);
+  letter-spacing:-.04em;
+}
+
+.chapter-head p{
+  max-width:650px;
+  margin:0;
+  color:var(--muted);
+  font-size:.78rem;
+  line-height:1.6;
+}
+
+.exhibit-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px;
+}
+
+.exhibit{
+  min-width:0;
+  overflow:hidden;
+  border:1px solid var(--line);
+  border-radius:23px;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.025),transparent 16%),
+    var(--panel);
+  box-shadow:0 18px 60px rgba(0,0,0,.18);
+}
+
+.exhibit.wide{
+  grid-column:1/-1;
+}
+
+.exhibit-head{
+  padding:16px;
+  display:flex;
+  align-items:flex-start;
+  gap:11px;
+  border-bottom:1px solid rgba(255,255,255,.065);
+}
+
+.exhibit-num{
+  width:34px;
+  height:34px;
+  flex:0 0 34px;
+  display:grid;
+  place-items:center;
+  border:1px solid rgba(241,199,91,.4);
+  border-radius:11px;
+  color:var(--gold2);
+  background:rgba(241,199,91,.06);
+  font-size:.66rem;
+  font-weight:900;
+}
+
+.exhibit-head h3{
+  margin:0;
+  font-size:1rem;
+}
+
+.exhibit-head p{
+  margin:5px 0 0;
+  color:var(--muted);
+  font-size:.67rem;
+  line-height:1.5;
+}
+
+.exhibit-body{
+  padding:14px;
+}
+
+.panel{
+  padding:12px;
+  border:1px solid var(--line);
+  border-radius:17px;
+  background:var(--panel2);
+}
+
+.toolbar{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:8px;
+}
+
+.toolbar.spread{
+  justify-content:space-between;
+}
+
+.chip{
+  min-height:30px;
+  padding:6px 9px;
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  color:var(--muted);
+  background:#0b131d;
+  font-size:.62rem;
+  font-weight:750;
+}
+
+.chip strong{
+  color:var(--text);
+}
+
+.section-note{
+  margin:10px 0 0;
+  color:var(--muted);
+  font-size:.66rem;
+  line-height:1.55;
+}
+
+/* ========================================================================== */
+/* CHARACTER EXHIBITS                                                         */
+/* ========================================================================== */
+
+.character-grid{
+  display:grid;
+  grid-template-columns:minmax(220px,.8fr) minmax(0,1.2fr);
+  gap:12px;
+}
+
+.paperdoll-stage{
+  min-height:390px;
+  display:grid;
+  place-items:center;
+  border:1px solid var(--line);
+  border-radius:18px;
+  background:
+    radial-gradient(circle at 50% 38%,rgba(101,220,236,.08),transparent 50%),
+    #09121c;
+}
+
+#paperdoll{
+  width:min(290px,100%);
+  max-height:390px;
+}
+
+.swatch-row{
+  margin-top:10px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+}
+
+.swatch{
+  width:38px;
+  height:38px;
+  padding:0;
+  border:2px solid transparent;
+  border-radius:12px;
+  background:var(--swatch);
+  cursor:pointer;
+}
+
+.swatch[aria-pressed="true"]{
+  border-color:var(--gold2);
+  box-shadow:0 0 0 2px #081019;
+}
+
+.equipment-list{
+  display:grid;
+  gap:8px;
+}
+
+.equipment-slot{
+  min-height:56px;
+  padding:9px 11px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  text-align:left;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:#101b28;
+  cursor:pointer;
+}
+
+.equipment-slot i{
+  width:35px;
+  height:35px;
+  display:grid;
+  place-items:center;
+  border:1px solid rgba(241,199,91,.25);
+  border-radius:11px;
+  color:var(--gold2);
+  font-style:normal;
+}
+
+.equipment-slot b,
+.equipment-slot small{
+  display:block;
+}
+
+.equipment-slot small{
+  margin-top:3px;
+  color:var(--muted);
+  font-size:.59rem;
+}
+
+.stat-grid{
+  margin-top:10px;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:7px;
+}
+
+.stat{
+  padding:8px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:#0a131d;
+  text-align:center;
+}
+
+.stat strong,
+.stat small{
+  display:block;
+}
+
+.stat strong{
+  color:var(--gold2);
+}
+
+.stat small{
+  margin-top:3px;
+  color:var(--muted);
+  font-size:.52rem;
+  text-transform:uppercase;
+}
+
+.resource-stack{
+  display:grid;
+  gap:9px;
+}
+
+.resource-meter{
+  position:relative;
+  height:46px;
+  overflow:hidden;
+  border:1px solid var(--line);
+  border-radius:13px;
+  background:#091019;
+}
+
+.resource-meter .fill{
+  position:absolute;
+  inset:0 auto 0 0;
+  width:var(--value);
+  background:linear-gradient(90deg,var(--dark),var(--color));
+  transition:width .32s var(--ease);
+}
+
+.resource-meter .label{
+  position:relative;
+  z-index:2;
+  height:100%;
+  padding:0 12px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  font-size:.68rem;
+  font-weight:900;
+}
+
+.status-row{
+  margin-top:9px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+}
+
+.status{
+  min-width:45px;
+  padding:7px;
+  display:grid;
+  place-items:center;
+  border:1px solid var(--line);
+  border-radius:11px;
+  background:#0a131d;
+  font-size:1rem;
+}
+
+.status small{
+  margin-top:2px;
+  color:var(--muted);
+  font-size:.48rem;
+}
+
+.inventory-layout{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(220px,.7fr);
+  gap:12px;
+}
+
+.inventory-grid{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:7px;
+}
+
+.item-slot{
+  position:relative;
+  aspect-ratio:1;
+  min-width:0;
+  padding:6px;
+  display:grid;
+  place-items:center;
+  border:1px solid var(--line);
+  border-radius:13px;
+  background:#0b141f;
+  cursor:pointer;
+}
+
+.item-slot.selected{
+  border-color:var(--gold);
+  box-shadow:0 0 0 1px rgba(241,199,91,.3);
+}
+
+.item-slot.empty{
+  opacity:.45;
+}
+
+.item-slot svg{
+  width:70%;
+  height:70%;
+}
+
+.item-slot .qty{
+  position:absolute;
+  right:5px;
+  bottom:3px;
+  color:var(--gold2);
+  font-size:.55rem;
+  font-weight:900;
+}
+
+.item-detail h4{
+  margin:0 0 5px;
+}
+
+.item-detail p{
+  margin:0;
+  color:var(--muted);
+  font-size:.66rem;
+  line-height:1.5;
+}
+
+.effect-list{
+  margin:10px 0;
+  display:grid;
+  gap:5px;
+}
+
+.effect-line{
+  padding:6px 8px;
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  color:var(--muted);
+  font-size:.59rem;
+}
+
+.effect-line strong{
+  color:var(--text);
+}
+
+.talent-stage{
+  position:relative;
+  min-height:360px;
+  overflow:hidden;
+  border:1px solid var(--line);
+  border-radius:18px;
+  background:
+    radial-gradient(circle at 50% 70%,rgba(179,141,255,.11),transparent 40%),
+    #08111b;
+}
+
+#talent-svg{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+}
+
+.talent-node{
+  position:absolute;
+  left:var(--x);
+  top:var(--y);
+  width:62px;
+  min-height:58px;
+  padding:5px;
+  transform:translate(-50%,-50%);
+  border:1px solid var(--line);
+  border-radius:17px;
+  background:#101927;
+  color:var(--muted);
+  cursor:pointer;
+}
+
+.talent-node.available{
+  border-color:var(--gold);
+  color:var(--gold2);
+  box-shadow:0 0 20px rgba(241,199,91,.12);
+}
+
+.talent-node.unlocked{
+  border-color:var(--cyan);
+  color:var(--cyan);
+  background:#10212d;
+}
+
+.talent-node b,
+.talent-node small{
+  display:block;
+}
+
+.talent-node b{
+  font-size:1rem;
+}
+
+.talent-node small{
+  margin-top:3px;
+  font-size:.5rem;
+}
+
+/* ========================================================================== */
+/* CONNECTED WORLD EXHIBIT                                                    */
+/* ========================================================================== */
+
+.world-showcase{
+  display:grid;
+  grid-template-columns:minmax(0,1.25fr) minmax(270px,.75fr);
+  gap:12px;
+}
+
+.world-visual-stack{
+  min-width:0;
+  display:grid;
+  gap:10px;
+}
+
+.first-person-wrap,
+.map-wrap{
+  position:relative;
+  overflow:hidden;
+  border:1px solid var(--line);
+  border-radius:19px;
+  background:#071019;
+}
+
+.first-person-wrap{
+  min-height:330px;
+}
+
+.map-wrap{
+  min-height:330px;
+}
+
+#first-person-canvas,
+#world-map-canvas{
+  display:block;
+  width:100%;
+  height:100%;
+  touch-action:none;
+}
+
+.first-person-wrap canvas{
+  position:absolute;
+  inset:0;
+}
+
+.scene-hud{
+  position:absolute;
+  z-index:4;
+  left:12px;
+  right:12px;
+  top:12px;
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  pointer-events:none;
+}
+
+.scene-badge{
+  max-width:70%;
+  padding:8px 10px;
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:13px;
+  background:rgba(5,11,17,.78);
+  backdrop-filter:blur(10px);
+}
+
+.scene-badge b,
+.scene-badge small{
+  display:block;
+}
+
+.scene-badge b{
+  font-size:.72rem;
+}
+
+.scene-badge small{
+  margin-top:3px;
+  color:var(--muted);
+  font-size:.52rem;
+}
+
+.compass-badge{
+  width:50px;
+  height:50px;
+  display:grid;
+  place-items:center;
+  border:1px solid rgba(241,199,91,.45);
+  border-radius:15px;
+  color:var(--gold2);
+  background:rgba(5,11,17,.78);
+  transform:rotate(var(--rotation));
+}
+
+.map-hud{
+  position:absolute;
+  z-index:4;
+  left:10px;
+  right:10px;
+  bottom:10px;
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  pointer-events:none;
+}
+
+.map-hud .chip{
+  background:rgba(5,11,17,.82);
+  backdrop-filter:blur(9px);
+}
+
+.world-sidebar{
+  min-width:0;
+  display:grid;
+  align-content:start;
+  gap:10px;
+}
+
+.world-meta{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:7px;
+}
+
+.world-meta div{
+  padding:9px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:#0a131d;
+}
+
+.world-meta b,
+.world-meta small{
+  display:block;
+}
+
+.world-meta b{
+  color:var(--gold2);
+  font-size:.75rem;
+}
+
+.world-meta small{
+  margin-top:3px;
+  color:var(--muted);
+  font-size:.5rem;
+}
+
+.direction-pad{
+  width:min(230px,100%);
+  margin:0 auto;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:7px;
+}
+
+.direction-pad button{
+  min-height:58px;
+  border:1px solid var(--line);
+  border-radius:15px;
+  background:#111c29;
+  font-weight:900;
+  cursor:pointer;
+}
+
+.direction-pad button:active{
+  transform:scale(.94);
+}
+
+.direction-pad .north{grid-column:2}
+.direction-pad .west{grid-column:1;grid-row:2}
+.direction-pad .center{grid-column:2;grid-row:2;color:var(--gold2)}
+.direction-pad .east{grid-column:3;grid-row:2}
+.direction-pad .south{grid-column:2;grid-row:3}
+
+.seed-row{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:7px;
+}
+
+.seed-row input{
+  min-width:0;
+  min-height:44px;
+  padding:0 11px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  color:var(--text);
+  background:#08111b;
+}
+
+.terrain-effects{
+  display:grid;
+  gap:6px;
+}
+
+.terrain-effect{
+  padding:8px;
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  border:1px solid var(--line);
+  border-radius:11px;
+  color:var(--muted);
+  background:#0a131d;
+  font-size:.59rem;
+}
+
+.terrain-effect strong{
+  color:var(--text);
+}
+
+.presence-panel{
+  min-height:130px;
+  padding:11px;
+  border:1px solid var(--line);
+  border-radius:15px;
+  background:#0a131d;
+}
+
+.presence-panel h4{
+  margin:0;
+}
+
+.presence-panel p{
+  margin:6px 0 10px;
+  color:var(--muted);
+  font-size:.64rem;
+  line-height:1.5;
+}
+
+.route-progress{
+  height:7px;
+  overflow:hidden;
+  border-radius:999px;
+  background:#071019;
+}
+
+.route-progress span{
+  display:block;
+  width:var(--route);
+  height:100%;
+  background:linear-gradient(90deg,var(--cyan),var(--gold));
+  transition:width .18s linear;
+}
+
+/* ========================================================================== */
+/* NPC / DIALOGUE / QUESTS                                                    */
+/* ========================================================================== */
+
+.npc-layout{
+  display:grid;
+  grid-template-columns:minmax(210px,.65fr) minmax(0,1.35fr);
+  gap:12px;
+}
+
+.npc-list{
+  display:grid;
+  gap:7px;
+}
+
+.npc-card{
+  min-height:62px;
+  padding:9px;
+  display:flex;
+  align-items:center;
+  gap:9px;
+  text-align:left;
+  border:1px solid var(--line);
+  border-radius:13px;
+  background:#101a27;
+  cursor:pointer;
+}
+
+.npc-card.active{
+  border-color:var(--gold);
+}
+
+.npc-card i{
+  width:38px;
+  height:38px;
+  display:grid;
+  place-items:center;
+  border:1px solid var(--line);
+  border-radius:12px;
+  color:var(--gold2);
+  background:#08111b;
+  font-style:normal;
+}
+
+.npc-card b,
+.npc-card small{
+  display:block;
+}
+
+.npc-card small{
+  margin-top:3px;
+  color:var(--muted);
+  font-size:.55rem;
+}
+
+.dialogue-stage{
+  min-height:260px;
+  padding:14px;
+  border:1px solid var(--line);
+  border-radius:17px;
+  background:
+    radial-gradient(circle at 20% 20%,rgba(179,141,255,.08),transparent 35%),
+    #09121c;
+}
+
+.dialogue-speaker{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.dialogue-avatar{
+  width:46px;
+  height:46px;
+  display:grid;
+  place-items:center;
+  border:1px solid var(--line2);
+  border-radius:14px;
+  color:var(--gold2);
+  background:#101a28;
+  font-size:1.1rem;
+  font-weight:900;
+}
+
+.dialogue-line{
+  min-height:62px;
+  margin:14px 0;
+  color:var(--soft);
+  line-height:1.65;
+}
+
+.choice-list{
+  display:grid;
+  gap:7px;
+}
+
+.choice-button{
+  min-height:52px;
+  padding:9px 11px;
+  text-align:left;
+  border:1px solid var(--line);
+  border-radius:13px;
+  background:#111c29;
+  cursor:pointer;
+}
+
+.choice-button:disabled{
+  opacity:.38;
+}
+
+.choice-button b,
+.choice-button small{
+  display:block;
+}
+
+.choice-button small{
+  margin-top:3px;
+  color:var(--muted);
+  font-size:.55rem;
+}
+
+.quest-layout{
+  display:grid;
+  grid-template-columns:minmax(210px,.7fr) minmax(0,1.3fr);
+  gap:12px;
+}
+
+.quest-list{
+  display:grid;
+  gap:7px;
+}
+
+.quest-card{
+  min-height:58px;
+  padding:9px 10px;
+  text-align:left;
+  border:1px solid var(--line);
+  border-radius:13px;
+  background:#101a27;
+  cursor:pointer;
+}
+
+.quest-card.active{
+  border-color:var(--gold);
+}
+
+.quest-card b,
+.quest-card small{
+  display:block;
+}
+
+.quest-card small{
+  margin-top:3px;
+  color:var(--muted);
+  font-size:.55rem;
+}
+
+.objective-list{
+  display:grid;
+  gap:7px;
+}
+
+.objective{
+  padding:8px;
+  display:grid;
+  grid-template-columns:28px minmax(0,1fr) auto;
+  align-items:center;
+  gap:8px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:#0a131d;
+}
+
+.objective.done{
+  border-color:rgba(99,223,160,.38);
+}
+
+.objective .check{
+  width:28px;
+  height:28px;
+  display:grid;
+  place-items:center;
+  border:1px solid var(--line);
+  border-radius:9px;
+  color:var(--muted);
+}
+
+.objective.done .check{
+  color:var(--green);
+}
+
+.objective b,
+.objective small{
+  display:block;
+}
+
+.objective small{
+  margin-top:3px;
+  color:var(--muted);
+  font-size:.52rem;
+}
+
+.faction-grid{
+  margin-top:10px;
+  display:grid;
+  gap:6px;
+}
+
+.faction-row{
+  display:grid;
+  grid-template-columns:90px minmax(0,1fr) 35px;
+  align-items:center;
+  gap:8px;
+  font-size:.58rem;
+}
+
+.faction-track{
+  position:relative;
+  height:7px;
+  border-radius:999px;
+  background:#071019;
+}
+
+.faction-track span{
+  position:absolute;
+  left:var(--position);
+  top:50%;
+  width:11px;
+  height:11px;
+  border-radius:50%;
+  background:var(--gold2);
+  transform:translate(-50%,-50%);
+}
+
+/* ========================================================================== */
+/* COMBAT                                                                     */
+/* ========================================================================== */
+
+.combat-shell{
+  display:grid;
+  gap:10px;
+}
+
+.turn-strip{
+  display:flex;
+  gap:7px;
+  overflow-x:auto;
+  padding-bottom:3px;
+}
+
+.turn-chip{
+  min-width:92px;
+  padding:7px;
+  border:1px solid var(--line);
+  border-radius:11px;
+  background:#0a131d;
+}
+
+.turn-chip.active{
+  border-color:var(--gold);
+  color:var(--gold2);
+}
+
+.turn-chip b,
+.turn-chip small{
+  display:block;
+}
+
+.turn-chip small{
+  margin-top:3px;
+  color:var(--muted);
+  font-size:.5rem;
+}
+
+.battlefield{
+  position:relative;
+  min-height:420px;
+  overflow:hidden;
+  border:1px solid var(--line);
+  border-radius:20px;
+  background:
+    radial-gradient(ellipse at 50% 105%,rgba(73,104,61,.6),transparent 55%),
+    linear-gradient(180deg,#365b6e 0 45%,#26422d 45% 100%);
+}
+
+.battlefield::before{
+  content:"";
+  position:absolute;
+  inset:45% 0 auto;
+  height:1px;
+  background:rgba(255,255,255,.08);
+}
+
+.team-field{
+  position:absolute;
+  inset:0;
+}
+
+.combat-unit{
+  position:absolute;
+  left:var(--x);
+  top:var(--y);
+  width:102px;
+  min-height:120px;
+  padding:4px;
+  transform:translate(-50%,-50%) scale(var(--scale));
+  border:1px solid transparent;
+  border-radius:17px;
+  background:transparent;
+  cursor:default;
+  transition:filter .2s ease,transform .2s var(--spring),border-color .2s ease;
+}
+
+.combat-unit.valid-target{
+  border-color:var(--gold2);
+  background:rgba(241,199,91,.08);
+  cursor:pointer;
+  animation:targetPulse 1.1s ease-in-out infinite;
+}
+
+.combat-unit.invalid-target{
+  filter:grayscale(.7) brightness(.55);
+}
+
+.combat-unit.active-unit{
+  filter:drop-shadow(0 0 12px rgba(255,227,155,.55));
+}
+
+.combat-unit.defeated{
+  opacity:.3;
+  filter:grayscale(1);
+}
+
+@keyframes targetPulse{
+  50%{box-shadow:0 0 0 4px rgba(241,199,91,.12)}
+}
+
+.combat-unit.attack{
+  animation:attack .55s var(--spring);
+}
+
+.combat-unit.hit{
+  animation:hit .5s ease;
+}
+
+@keyframes attack{
+  45%{transform:translate(-50%,-50%) scale(calc(var(--scale) * 1.14)) translateX(var(--lunge))}
+}
+
+@keyframes hit{
+  25%{filter:brightness(2);transform:translate(-46%,-50%) scale(var(--scale))}
+  55%{transform:translate(-54%,-50%) scale(var(--scale))}
+}
+
+.combat-unit svg{
+  width:100%;
+  height:96px;
+}
+
+.unit-name{
+  display:block;
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+  text-align:center;
+  font-size:.58rem;
+  font-weight:900;
+}
+
+.unit-bars{
+  margin-top:4px;
+  display:grid;
+  gap:3px;
+}
+
+.unit-bar{
+  height:6px;
+  overflow:hidden;
+  border-radius:999px;
+  background:#281013;
+}
+
+.unit-bar span{
+  display:block;
+  width:var(--value);
+  height:100%;
+  background:var(--bar);
+}
+
+.intent-badge{
+  position:absolute;
+  left:50%;
+  bottom:100%;
+  min-width:90px;
+  padding:5px 7px;
+  transform:translateX(-50%);
+  border:1px solid rgba(240,103,115,.4);
+  border-radius:9px;
+  color:#ffb5bd;
+  background:rgba(42,8,13,.8);
+  font-size:.48rem;
+  text-align:center;
+}
+
+.combat-controls{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(200px,.6fr);
+  gap:10px;
+}
+
+.ability-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:7px;
+}
+
+.ability-button{
+  min-height:60px;
+  padding:8px;
+  text-align:left;
+  border:1px solid var(--line);
+  border-radius:13px;
+  background:#111c29;
+  cursor:pointer;
+}
+
+.ability-button:disabled{
+  opacity:.35;
+}
+
+.ability-button b,
+.ability-button small{
+  display:block;
+}
+
+.ability-button small{
+  margin-top:3px;
+  color:var(--muted);
+  font-size:.52rem;
+}
+
+.combat-log{
+  min-height:128px;
+  max-height:160px;
+  overflow:auto;
+  padding:10px;
+  border:1px solid var(--line);
+  border-radius:13px;
+  background:#08111b;
+  color:var(--muted);
+  font-size:.6rem;
+  line-height:1.55;
+}
+
+.target-banner{
+  display:none;
+  padding:9px;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  border:1px solid rgba(241,199,91,.4);
+  border-radius:13px;
+  background:rgba(241,199,91,.07);
+}
+
+.target-banner.open{
+  display:flex;
+}
+
+.floating-number{
+  position:absolute;
+  z-index:20;
+  color:var(--float);
+  font-size:1rem;
+  font-weight:950;
+  pointer-events:none;
+  animation:floatUp .9s ease forwards;
+}
+
+@keyframes floatUp{
+  to{opacity:0;transform:translateY(-52px) scale(1.25)}
+}
+
+.formation-grid{
+  width:min(300px,100%);
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:6px;
+}
+
+.formation-cell{
+  aspect-ratio:1;
+  padding:4px;
+  border:1px dashed var(--line2);
+  border-radius:12px;
+  background:#08111b;
+  cursor:pointer;
+}
+
+.party-token{
+  width:100%;
+  height:100%;
+  display:grid;
+  place-items:center;
+  border:1px solid color-mix(in srgb,var(--token),transparent 35%);
+  border-radius:9px;
+  color:var(--token);
+  background:color-mix(in srgb,var(--token),transparent 90%);
+  font-size:.55rem;
+  font-weight:900;
+}
+
+.party-token.selected{
+  box-shadow:0 0 0 2px var(--gold);
+}
+
+/* ========================================================================== */
+/* ECONOMY / LOCATIONS / PRODUCTION                                            */
+/* ========================================================================== */
+
+.loot-market-layout{
+  display:grid;
+  grid-template-columns:minmax(220px,.65fr) minmax(0,1.35fr);
+  gap:12px;
+}
+
+.loot-card{
+  min-height:245px;
+  padding:15px;
+  display:grid;
+  place-items:center;
+  text-align:center;
+  border:1px solid var(--rarity,var(--line));
+  border-radius:18px;
+  background:
+    radial-gradient(circle at 50% 35%,color-mix(in srgb,var(--rarity),transparent 82%),transparent 48%),
+    #09121c;
+}
+
+.loot-icon{
+  width:90px;
+  height:90px;
+}
+
+.loot-card h4{
+  margin:8px 0 4px;
+}
+
+.loot-card p{
+  margin:0;
+  color:var(--muted);
+  font-size:.62rem;
+}
+
+.market-list{
+  display:grid;
+  gap:7px;
+}
+
+.market-item{
+  padding:8px 9px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:#0a131d;
+}
+
+.market-item b,
+.market-item small{
+  display:block;
+}
+
+.market-item small{
+  margin-top:3px;
+  color:var(--muted);
+  font-size:.52rem;
+}
+
+.location-layout{
+  display:grid;
+  grid-template-columns:minmax(0,1.2fr) minmax(230px,.8fr);
+  gap:12px;
+}
+
+.interior-stage{
+  min-height:360px;
+  overflow:hidden;
+  border:1px solid var(--line);
+  border-radius:19px;
+  background:#08111b;
+}
+
+#interior-svg{
+  width:100%;
+  height:100%;
+  min-height:360px;
+  display:block;
+}
+
+.room-list{
+  display:grid;
+  gap:7px;
+}
+
+.room-button{
+  min-height:54px;
+  padding:8px 10px;
+  text-align:left;
+  border:1px solid var(--line);
+  border-radius:13px;
+  background:#101a27;
+  cursor:pointer;
+}
+
+.room-button.active{
+  border-color:var(--gold);
+}
+
+.room-button b,
+.room-button small{
+  display:block;
+}
+
+.room-button small{
+  margin-top:3px;
+  color:var(--muted);
+  font-size:.52rem;
+}
+
+.ai-stage,
+.fx-stage{
+  position:relative;
+  min-height:280px;
+  overflow:hidden;
+  border:1px solid var(--line);
+  border-radius:18px;
+  background:#08111b;
+}
+
+#ai-canvas,
+#fx-canvas{
+  display:block;
+  width:100%;
+  height:100%;
+}
+
+.control-grid{
+  margin-top:10px;
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:8px;
+}
+
+.control-grid label{
+  padding:9px;
+  display:grid;
+  gap:6px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  color:var(--muted);
+  background:#0a131d;
+  font-size:.58rem;
+}
+
+.control-grid output{
+  color:var(--gold2);
+  font-weight:900;
+}
+
+.save-layout{
+  display:grid;
+  grid-template-columns:minmax(260px,.8fr) minmax(0,1.2fr);
+  gap:12px;
+}
+
+.save-slots{
+  display:grid;
+  gap:8px;
+}
+
+.save-slot{
+  padding:10px;
+  border:1px solid var(--line);
+  border-radius:13px;
+  background:#0a131d;
+}
+
+.save-slot h4{
+  margin:0 0 6px;
+}
+
+.save-slot p{
+  margin:0 0 9px;
+  color:var(--muted);
+  font-size:.56rem;
+}
+
+.debug{
+  min-height:320px;
+  max-height:520px;
+  overflow:auto;
+  margin:0;
+  padding:12px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  color:#b6c9d9;
+  background:#050a10;
+  font:11px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace;
+  white-space:pre-wrap;
+  word-break:break-word;
+}
+
+.bottom-nav{
+  position:fixed;
+  z-index:80;
+  left:0;
+  right:0;
+  bottom:0;
+  padding:8px 10px calc(8px + var(--safe-bottom));
+  display:none;
+  grid-template-columns:repeat(4,1fr);
+  gap:5px;
+  border-top:1px solid rgba(255,255,255,.07);
+  background:rgba(7,10,15,.94);
+  backdrop-filter:blur(18px);
+}
+
+.bottom-nav button{
+  min-height:52px;
+  padding:5px;
+  border:0;
+  border-radius:13px;
+  color:var(--muted);
+  background:transparent;
+  font-size:.55rem;
+  font-weight:900;
+  letter-spacing:.07em;
+}
+
+.bottom-nav button:active{
+  color:var(--gold2);
+  background:rgba(241,199,91,.08);
+}
+
+.toast{
+  position:fixed;
+  z-index:120;
+  left:50%;
+  bottom:calc(88px + var(--safe-bottom));
+  max-width:min(430px,calc(100% - 28px));
+  padding:10px 14px;
+  border:1px solid var(--line2);
+  border-radius:13px;
+  color:var(--text);
+  background:rgba(10,18,27,.96);
+  box-shadow:0 16px 50px rgba(0,0,0,.35);
+  opacity:0;
+  pointer-events:none;
+  transform:translate(-50%,14px);
+  transition:opacity .2s ease,transform .2s var(--spring);
+  font-size:.68rem;
+  text-align:center;
+}
+
+.toast.show{
+  opacity:1;
+  transform:translate(-50%,0);
+}
+
+@media(max-width:850px){
+  .hero-grid,
+  .world-showcase,
+  .npc-layout,
+  .quest-layout,
+  .loot-market-layout,
+  .location-layout,
+  .save-layout{
+    grid-template-columns:1fr;
+  }
+
+  .hero-visual{
+    min-height:330px;
+  }
+
+  .chapter-head{
+    display:block;
+  }
+
+  .chapter-head p{
+    margin-top:8px;
+  }
+}
+
+@media(max-width:680px){
+  .brand-copy small{
+    display:none;
+  }
+
+  .hero{
+    padding-top:34px;
+  }
+
+  .hero h1{
+    font-size:clamp(2.8rem,17vw,5.2rem);
+  }
+
+  .chapter-nav{
+    display:none;
+  }
+
+  .exhibit-grid{
+    grid-template-columns:1fr;
+  }
+
+  .exhibit.wide{
+    grid-column:auto;
+  }
+
+  .character-grid,
+  .inventory-layout,
+  .combat-controls{
+    grid-template-columns:1fr;
+  }
+
+  .paperdoll-stage{
+    min-height:340px;
+  }
+
+  .inventory-grid{
+    grid-template-columns:repeat(5,1fr);
+  }
+
+  .stat-grid{
+    grid-template-columns:repeat(2,1fr);
+  }
+
+  .battlefield{
+    min-height:470px;
+  }
+
+  .bottom-nav{
+    display:grid;
+  }
+
+  main{
+    padding-bottom:105px;
+  }
+}
+
+@media(max-width:390px){
+  .topbar{
+    padding-left:10px;
+    padding-right:10px;
+  }
+
+  .brand{
+    gap:9px;
+  }
+
+  .brand-mark{
+    width:46px;
+    height:46px;
+    flex-basis:46px;
+  }
+
+  .brand-copy strong{
+    font-size:.78rem;
+  }
+
+  .icon-button{
+    width:44px;
+    height:44px;
+  }
+
+  .hero-stat-grid{
+    grid-template-columns:repeat(2,1fr);
+  }
+
+  .exhibit-head,
+  .exhibit-body{
+    padding:12px;
+  }
+
+  .first-person-wrap{
+    min-height:300px;
+  }
+
+  .map-wrap{
+    min-height:360px;
+  }
+
+  .inventory-grid{
+    grid-template-columns:repeat(4,1fr);
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:.001ms!important;
+    animation-iteration-count:1!important;
+    scroll-behavior:auto!important;
+    transition-duration:.001ms!important;
+  }
+}
+</style>
+</head>
+<body>
+<canvas id="ambient-canvas" aria-hidden="true"></canvas>
+<div class="ambient-vignette" aria-hidden="true"></div>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true"></span>
+    <span class="brand-copy">
+      <strong>FORGE RPG STUDIO</strong>
+      <small>MILESTONE 3 · CONNECTED WORLD</small>
+    </span>
+  </div>
+  <div class="top-actions">
+    <button class="icon-button" type="button" data-jump="world" aria-label="Jump to connected world">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3Z"/><path d="M9 3v15M15 6v15"/></svg>
+    </button>
+    <button class="icon-button" type="button" id="reset-studio" aria-label="Reset showroom">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4v6h6"/><path d="M4 10a8 8 0 1 0 2.3-5.7"/></svg>
+    </button>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="hero-grid">
+    <div>
+      <p class="kicker">CONNECTED RPG WORLD ARCHITECTURE</p>
+      <h1>WORLD<br><span>IN MOTION</span></h1>
+      <p class="hero-lede">Milestone 3 turns exploration into a real game-state pipeline. Terrain drains resources, fog persists, NPCs occupy the generated map, encounters emerge from biome and pressure, landmarks open interiors, and every movement event can advance quests or dialogue.</p>
+      <div class="hero-actions">
+        <button class="primary" type="button" data-jump="world">Explore connected world</button>
+        <button class="secondary" type="button" data-jump="combat">View world-linked combat</button>
+      </div>
+      <div class="hero-stat-grid">
+        <div class="hero-stat"><strong>6</strong><small>terrain systems</small></div>
+        <div class="hero-stat"><strong>4</strong><small>persistent locations</small></div>
+        <div class="hero-stat"><strong>5</strong><small>world NPCs</small></div>
+        <div class="hero-stat"><strong>12</strong><small>showroom exhibits</small></div>
+      </div>
+    </div>
+    <div class="hero-visual" aria-hidden="true">
+      <div class="world-orbit">
+        <div class="world-core">
+          <svg viewBox="0 0 100 100" fill="none" stroke="currentColor">
+            <circle cx="50" cy="50" r="31" stroke="#f1c75b" opacity=".55"/>
+            <path d="M19 50h62M50 19c13 15 13 47 0 62M50 19c-13 15-13 47 0 62" stroke="#65dcec" opacity=".75"/>
+            <path d="M27 32c15 8 31 8 46 0M27 68c15-8 31-8 46 0" stroke="#63dfa0" opacity=".55"/>
+            <circle cx="68" cy="38" r="5" fill="#ffe39b" stroke="none"/>
+          </svg>
+        </div>
+        <span class="orbit-chip">PERSISTENT FOG</span>
+        <span class="orbit-chip">LIVE ENCOUNTERS</span>
+        <span class="orbit-chip">NPC SCHEDULES</span>
+        <span class="orbit-chip">INTERIORS</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<nav class="chapter-nav" aria-label="Showroom chapters">
+  <button data-jump="character"><b>CHARACTER</b><small>Identity, resources, inventory, talents</small></button>
+  <button data-jump="world"><b>WORLD</b><small>Exploration, NPCs, quests</small></button>
+  <button data-jump="combat"><b>COMBAT</b><small>Encounters, rewards, economy</small></button>
+  <button data-jump="production"><b>PRODUCTION</b><small>Interiors, director, saves</small></button>
+</nav>
+
+<main>
+<section class="chapter" id="character">
+  <div class="chapter-head">
+    <h2>Character & Progression</h2>
+    <p>The character systems remain showroom-ready while now receiving terrain costs, exploration conditions, quest rewards, and combat consequences from the connected world.</p>
+  </div>
+  <div class="exhibit-grid">
+    <article class="exhibit">
+      <header class="exhibit-head"><span class="exhibit-num">01</span><div><h3>Layered Vector Character</h3><p>Equipment, colors, identity, and derived statistics share one authoritative character model.</p></div></header>
+      <div class="exhibit-body character-grid">
+        <div class="paperdoll-stage">
+          <svg id="paperdoll" viewBox="0 0 240 380" role="img" aria-label="Layered vector hero">
+            <defs>
+              <linearGradient id="armorGrad" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#4e7188"/><stop offset="1" stop-color="#182c3c"/></linearGradient>
+              <linearGradient id="cloakGrad" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#3e526a"/><stop offset="1" stop-color="#1d2634"/></linearGradient>
+            </defs>
+            <ellipse cx="120" cy="359" rx="72" ry="10" fill="#000" opacity=".35"/>
+            <path id="pd-cloak" d="M73 120Q120 83 167 120l23 214q-70 36-140 0Z" fill="url(#cloakGrad)"/>
+            <g id="pd-body">
+              <path d="M82 238h33l-10 108H68Z" fill="#27394a"/>
+              <path d="M125 238h33l17 108h-37Z" fill="#233443"/>
+              <path d="M78 126q42-28 84 0l-7 124q-35 22-70 0Z" fill="url(#armorGrad)"/>
+              <path d="M83 130q-9 46-9 98M157 130q9 46 9 98" stroke="var(--skin,#d6a47d)" stroke-width="17" stroke-linecap="round"/>
+              <circle cx="120" cy="78" r="38" fill="var(--skin,#d6a47d)"/>
+              <path id="pd-hair" d="M81 80q2-51 39-50 42 3 41 53l-18-24q-26 16-58 5Z" fill="var(--hair,#3b251d)"/>
+              <path id="pd-helm" d="M80 76q7-49 40-49t41 49l-19-16q-21 12-45 3Z" fill="#56758b" opacity=".95"/>
+              <path id="pd-sword" d="m183 138 12-2-7 171-9 16-3-17Z" fill="#d9e4ea"/><path d="M166 286h35" stroke="#f1c75b" stroke-width="8"/>
+              <g id="pd-shield"><path d="M38 151Q63 132 88 151L82 258Q63 280 44 258Z" fill="#244663" stroke="#f1c75b" stroke-width="5"/><circle cx="63" cy="200" r="16" fill="#f1c75b" opacity=".75"/></g>
+            </g>
+          </svg>
+        </div>
+        <div>
+          <div class="panel">
+            <div class="toolbar spread"><div><strong id="character-name">Aven Rhyl</strong><div class="section-note" id="character-class">Runebound Vanguard · Human</div></div><span class="chip">LV <strong id="character-level">12</strong></span></div>
+            <div class="stat-grid" id="character-stats"></div>
+          </div>
+          <div class="panel" style="margin-top:9px">
+            <strong style="font-size:.7rem">Skin</strong><div class="swatch-row" id="skin-swatches"></div>
+            <strong style="display:block;margin-top:10px;font-size:.7rem">Hair</strong><div class="swatch-row" id="hair-swatches"></div>
+          </div>
+          <div class="equipment-list" id="equipment-list" style="margin-top:9px"></div>
+        </div>
+      </div>
+    </article>
+
+    <article class="exhibit">
+      <header class="exhibit-head"><span class="exhibit-num">02</span><div><h3>World-Aware Resource HUD</h3><p>Health, mana, stamina, and XP now react to terrain travel, resting, combat, statuses, and quest rewards.</p></div></header>
+      <div class="exhibit-body">
+        <div class="resource-stack" id="resource-stack"></div>
+        <div class="status-row" id="status-row"></div>
+        <div class="toolbar" style="margin-top:10px">
+          <button class="mini" data-demo="damage">Damage</button>
+          <button class="mini" data-demo="cast">Cast</button>
+          <button class="mini" data-demo="rest">Camp rest</button>
+          <button class="mini" data-demo="xp">Gain XP</button>
+        </div>
+        <p class="section-note">Mountain, swamp, desert, forest, and grass tiles use different stamina costs and hazard rules. A depleted traveler can no longer move until resting or recovering.</p>
+      </div>
+    </article>
+
+    <article class="exhibit">
+      <header class="exhibit-head"><span class="exhibit-num">03</span><div><h3>Inventory & World Gathering</h3><p>Items can be equipped, consumed, crafted, purchased, gathered from terrain, or awarded by locations and encounters.</p></div></header>
+      <div class="exhibit-body inventory-layout">
+        <div>
+          <div class="toolbar spread"><span class="chip">Capacity <strong id="inventory-capacity">0 / 20</strong></span><button class="mini" data-demo="gather">Gather current tile</button></div>
+          <div class="inventory-grid" id="inventory-grid" style="margin-top:9px"></div>
+        </div>
+        <div class="panel item-detail" id="item-detail"></div>
+      </div>
+    </article>
+
+    <article class="exhibit">
+      <header class="exhibit-head"><span class="exhibit-num">04</span><div><h3>Executable Talent Constellation</h3><p>Talents alter exploration stamina, gathering, combat, resource maximums, and unlocked abilities.</p></div></header>
+      <div class="exhibit-body">
+        <div class="toolbar spread"><span class="chip">Points <strong id="talent-points">0</strong></span><button class="mini" data-demo="talent-reset">Reset build</button></div>
+        <div class="talent-stage" id="talent-stage" style="margin-top:9px"><svg id="talent-svg" viewBox="0 0 600 440"></svg><div id="talent-nodes"></div></div>
+        <div class="panel" id="talent-detail" style="margin-top:9px"></div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section class="chapter" id="world">
+  <div class="chapter-head">
+    <h2>Connected World & Narrative</h2>
+    <p>Every movement step uses the same state pipeline for fog, stamina, terrain hazards, first-person composition, NPC presence, encounter checks, landmarks, interiors, and quest objectives.</p>
+  </div>
+  <div class="exhibit-grid">
+    <article class="exhibit wide">
+      <header class="exhibit-head"><span class="exhibit-num">05</span><div><h3>Persistent Seeded World</h3><p>Centered overhead exploration and layered first-person terrain now share persistent fog, terrain costs, routes, landmarks, NPCs, and world encounter nodes.</p></div></header>
+      <div class="exhibit-body world-showcase">
+        <div class="world-visual-stack">
+          <div class="first-person-wrap" id="first-person-wrap">
+            <canvas id="first-person-canvas"></canvas>
+            <div class="scene-hud"><div class="scene-badge"><b id="scene-location">Whispering Verge</b><small id="scene-pair">Grass V1 → Forest</small></div><div class="compass-badge" id="compass-badge">▲</div></div>
+          </div>
+          <div class="map-wrap" id="map-wrap">
+            <canvas id="world-map-canvas"></canvas>
+            <div class="map-hud"><span class="chip" id="map-coordinate">12, 9 · North</span><span class="chip" id="map-state">Exploring</span></div>
+          </div>
+        </div>
+        <aside class="world-sidebar">
+          <div class="world-meta">
+            <div><b id="current-terrain">Grass</b><small>current terrain</small></div>
+            <div><b id="ahead-terrain">Forest</b><small>terrain ahead</small></div>
+            <div><b id="world-discovered">0</b><small>fog tiles revealed</small></div>
+            <div><b id="world-steps">0</b><small>travel steps</small></div>
+          </div>
+          <div class="direction-pad" aria-label="Compass movement controls">
+            <button class="north" data-move="north" aria-label="Move north">N</button>
+            <button class="west" data-move="west" aria-label="Move west">W</button>
+            <button class="center" id="center-map" aria-label="Center map">◎</button>
+            <button class="east" data-move="east" aria-label="Move east">E</button>
+            <button class="south" data-move="south" aria-label="Move south">S</button>
+          </div>
+          <div class="seed-row"><input id="world-seed" value="EMBER-7451" aria-label="World seed"><button class="mini" id="generate-world">Generate</button></div>
+          <div class="terrain-effects" id="terrain-effects"></div>
+          <div class="presence-panel" id="presence-panel"></div>
+          <div class="panel">
+            <div class="toolbar spread"><strong style="font-size:.68rem">Route</strong><button class="mini" id="cancel-route">Cancel</button></div>
+            <div class="route-progress" style="margin-top:8px"><span id="route-progress"></span></div>
+            <p class="section-note">Tap a visible map tile to route there. Routing publishes the same per-tile events as compass movement and cannot pass through undiscovered fog.</p>
+          </div>
+        </aside>
+      </div>
+    </article>
+
+    <article class="exhibit">
+      <header class="exhibit-head"><span class="exhibit-num">06</span><div><h3>Map-Bound NPC & Dialogue Runtime</h3><p>NPCs exist at real world coordinates or interior rooms. Conversations unlock only when the player reaches them.</p></div></header>
+      <div class="exhibit-body npc-layout">
+        <div class="npc-list" id="npc-list"></div>
+        <div class="dialogue-stage">
+          <div class="dialogue-speaker"><div class="dialogue-avatar" id="dialogue-avatar">?</div><div><strong id="dialogue-speaker">No speaker</strong><div class="section-note" id="dialogue-context">Find an NPC in the world.</div></div></div>
+          <p class="dialogue-line" id="dialogue-line">NPC dialogue is location-gated and driven by serializable conditions and effects.</p>
+          <div class="choice-list" id="dialogue-choices"></div>
+        </div>
+      </div>
+    </article>
+
+    <article class="exhibit">
+      <header class="exhibit-head"><span class="exhibit-num">07</span><div><h3>Event-Driven Quest & Faction State</h3><p>Travel, landmarks, interiors, gathering, NPC dialogue, and combat automatically advance objectives.</p></div></header>
+      <div class="exhibit-body quest-layout">
+        <div class="quest-list" id="quest-list"></div>
+        <div class="panel" id="quest-detail"></div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section class="chapter" id="combat">
+  <div class="chapter-head">
+    <h2>World-Linked Combat & Economy</h2>
+    <p>Encounters originate from specific world nodes and biomes. Victory resolves the map encounter, updates quests, awards XP and gold, and returns the party to exploration.</p>
+  </div>
+  <div class="exhibit-grid">
+    <article class="exhibit wide">
+      <header class="exhibit-head"><span class="exhibit-num">08</span><div><h3>Connected Tactical Combat</h3><p>Formation, explicit target selection, enemy intent, statuses, unified resources, and world encounter resolution.</p></div></header>
+      <div class="exhibit-body combat-shell">
+        <div class="toolbar spread"><span class="chip">Round <strong id="combat-round">1</strong></span><div class="toolbar"><button class="mini" data-demo="wild-combat">Demo encounter</button><button class="mini" data-demo="elite-combat">Elite encounter</button><button class="mini" id="return-world">Return to world</button></div></div>
+        <div class="turn-strip" id="turn-strip"></div>
+        <div class="target-banner" id="target-banner"><span id="target-text">Select a target.</span><button class="mini" id="cancel-target">Cancel</button></div>
+        <div class="battlefield" id="battlefield"><div class="team-field" id="party-field"></div><div class="team-field" id="enemy-field"></div></div>
+        <div class="combat-controls"><div class="ability-grid" id="ability-grid"></div><div class="combat-log" id="combat-log"></div></div>
+        <div class="panel"><div class="toolbar spread"><strong style="font-size:.68rem">Formation</strong><span class="chip" id="formation-summary">Balanced</span></div><div class="formation-grid" id="formation-grid" style="margin-top:9px"></div></div>
+      </div>
+    </article>
+
+    <article class="exhibit wide">
+      <header class="exhibit-head"><span class="exhibit-num">09</span><div><h3>World Loot & Merchant Economy</h3><p>Encounter loot, terrain gathering, interior treasure, merchant stock, faction discounts, and persistent market state.</p></div></header>
+      <div class="exhibit-body loot-market-layout">
+        <div>
+          <div class="loot-card" id="loot-card"></div>
+          <div class="toolbar" style="margin-top:9px"><button class="mini" data-demo="roll-loot">Generate loot</button><button class="mini" data-demo="take-loot">Take item</button></div>
+        </div>
+        <div>
+          <div class="toolbar spread"><span class="chip">Gold <strong id="wallet">0</strong></span><span class="chip">Market day <strong id="market-day">1</strong></span><button class="mini" data-demo="market-day">Advance day</button></div>
+          <div class="market-list" id="market-list" style="margin-top:9px"></div>
+        </div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section class="chapter" id="production">
+  <div class="chapter-head">
+    <h2>Locations & Production Systems</h2>
+    <p>Interiors, encounter pressure, event-routed presentation, and full world persistence complete the Milestone 3 proof-of-concept assembly.</p>
+  </div>
+  <div class="exhibit-grid">
+    <article class="exhibit wide">
+      <header class="exhibit-head"><span class="exhibit-num">10</span><div><h3>Location & Interior Transition System</h3><p>Landmarks open authored interior room graphs with actions, NPCs, treasure, exits, and quest events.</p></div></header>
+      <div class="exhibit-body location-layout">
+        <div class="interior-stage"><svg id="interior-svg" viewBox="0 0 760 420" role="img" aria-label="Current location interior"></svg></div>
+        <div>
+          <div class="panel"><strong id="interior-title">No interior entered</strong><p class="section-note" id="interior-description">Reach a landmark on the generated world map and choose Enter Location.</p></div>
+          <div class="room-list" id="room-list" style="margin-top:9px"></div>
+          <div class="toolbar" id="interior-actions" style="margin-top:9px"></div>
+        </div>
+      </div>
+    </article>
+
+    <article class="exhibit">
+      <header class="exhibit-head"><span class="exhibit-num">11</span><div><h3>World Encounter Director & Presentation</h3><p>Biome, party condition, alert level, recent victories, and unresolved nodes determine encounter pressure.</p></div></header>
+      <div class="exhibit-body">
+        <div class="ai-stage"><canvas id="ai-canvas"></canvas></div>
+        <div class="control-grid"><label>Aggression <output id="aggression-out">55%</output><input id="aggression" type="range" min="0" max="100" value="55"></label><label>Alert <output id="alert-out">0%</output><input id="alert" type="range" min="0" max="100" value="0"></label></div>
+        <div class="fx-stage" style="margin-top:10px"><canvas id="fx-canvas"></canvas></div>
+      </div>
+    </article>
+
+    <article class="exhibit">
+      <header class="exhibit-head"><span class="exhibit-num">12</span><div><h3>Persistent Save & Debug Inspector</h3><p>Fog, NPCs, encounters, locations, interiors, quests, market, combat, and telemetry are versioned together.</p></div></header>
+      <div class="exhibit-body save-layout">
+        <div class="save-slots" id="save-slots"></div>
+        <pre class="debug" id="debug-output"></pre>
+      </div>
+    </article>
+  </div>
+</section>
+</main>
+
+<nav class="bottom-nav" aria-label="Mobile chapters"><button data-jump="character">CHARACTER</button><button data-jump="world">WORLD</button><button data-jump="combat">COMBAT</button><button data-jump="production">PRODUCTION</button></nav>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+"use strict";
+
+/* ========================================================================== */
+/* SECTION 01 — UTILITIES                                                      */
+/* ========================================================================== */
+
+const $=selector=>document.querySelector(selector);
+const $$=selector=>[...document.querySelectorAll(selector)];
+const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
+const lerp=(a,b,t)=>a+(b-a)*t;
+const deepClone=value=>typeof structuredClone==="function"?structuredClone(value):JSON.parse(JSON.stringify(value));
+const escapeHTML=value=>String(value).replace(/[&<>'"]/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[char]));
+
+function hashString(value){
+  let hash=2166136261;
+  for(const char of String(value)){
+    hash^=char.charCodeAt(0);
+    hash=Math.imul(hash,16777619);
+  }
+  return hash>>>0;
+}
+
+function mulberry32(seed){
+  return function(){
+    let t=seed+=0x6D2B79F5;
+    t=Math.imul(t^t>>>15,t|1);
+    t^=t+Math.imul(t^t>>>7,t|61);
+    return((t^t>>>14)>>>0)/4294967296;
+  };
+}
+
+function choice(list,random=Math.random){
+  return list[Math.floor(random()*list.length)];
+}
+
+function vibrate(pattern){
+  try{navigator.vibrate?.(pattern)}catch(_error){}
+}
+
+let toastTimer=0;
+function toast(message){
+  const element=$("#toast");
+  element.textContent=message;
+  element.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>element.classList.remove("show"),1900);
+}
+
+/* ========================================================================== */
+/* SECTION 02 — CONTENT REGISTRIES                                             */
+/* ========================================================================== */
+
+const EFFECT={
+  ADD_STAT:"ADD_STAT",
+  ADD_MAX:"ADD_MAX",
+  GRANT_ABILITY:"GRANT_ABILITY",
+  ADD_TRIGGER:"ADD_TRIGGER",
+  HEAL:"HEAL",
+  RESTORE:"RESTORE"
+};
+
+const ITEM_SLOT={
+  sword:"weapon",
+  staff:"weapon",
+  bow:"weapon",
+  shield:"offhand",
+  helm:"helmet",
+  armor:"armor",
+  ring:"ring",
+  cloak:"cloak"
+};
+
+const RARITY={
+  common:"#9ba8b5",
+  uncommon:"#63dfa0",
+  rare:"#65dcec",
+  epic:"#b38dff",
+  legendary:"#f1c75b"
+};
+
+const TERRAIN={
+  grass:{id:0,key:"grass",name:"Grass",color:"#3f6b45",walk:true,cost:1,encounter:.05,gather:"moon-herb",effect:"Open ground restores 1 stamina when no encounter occurs."},
+  forest:{id:1,key:"forest",name:"Forest",color:"#587a54",walk:true,cost:2,encounter:.12,gather:"moon-herb",effect:"Dense cover increases encounter chance and herb yield."},
+  mountain:{id:2,key:"mountain",name:"Mountain",color:"#576a79",walk:true,cost:4,encounter:.08,gather:"iron-ore",effect:"Steep travel costs 4 stamina but reveals one extra fog ring."},
+  lake:{id:3,key:"lake",name:"Lake",color:"#1c536a",walk:false,cost:99,encounter:0,gather:null,effect:"Lake tiles block travel without a future boat ability."},
+  swamp:{id:4,key:"swamp",name:"Swamp",color:"#415f4a",walk:true,cost:3,encounter:.15,gather:"moon-herb",effect:"Swamp travel may apply Poison for three turns."},
+  desert:{id:5,key:"desert",name:"Desert",color:"#b8894f",walk:true,cost:3,encounter:.09,gather:"arc-gem",effect:"Heat costs extra stamina when current stamina is below 40%."}
+};
+
+const TERRAIN_BY_ID=Object.fromEntries(Object.values(TERRAIN).map(item=>[item.id,item]));
+const TERRAIN_KEYS=Object.keys(TERRAIN);
+
+const PALETTES={
+  forest:{skyTop:"#304955",skyBottom:"#9bad8d",horizon:"#28503a",ground:"#1d3828",accent:"#6ca266",mist:"#c0d0bc"},
+  lake:{skyTop:"#456b80",skyBottom:"#aecdd2",horizon:"#3c8196",ground:"#174c63",accent:"#b8ecf2",mist:"#e0f0f1"},
+  grass:{skyTop:"#567f95",skyBottom:"#d4cda0",horizon:"#648758",ground:"#3f683d",accent:"#d5d178",mist:"#e9e0bd"},
+  swamp:{skyTop:"#394b4d",skyBottom:"#8f9d7c",horizon:"#415a48",ground:"#243c33",accent:"#9bae6d",mist:"#bec59f"},
+  desert:{skyTop:"#668ca4",skyBottom:"#f0c47f",horizon:"#be8652",ground:"#9f6d42",accent:"#f8d28e",mist:"#f6d6a0"},
+  mountain:{skyTop:"#425b70",skyBottom:"#bac7c9",horizon:"#526575",ground:"#34434f",accent:"#dfe8e6",mist:"#dbe1df"}
+};
+
+const STATUS_DEFS={
+  ward:{id:"ward",name:"Warded",icon:"⬡",duration:3,effects:[{type:EFFECT.ADD_STAT,stat:"defense",value:8}]},
+  haste:{id:"haste",name:"Haste",icon:"➟",duration:3,effects:[{type:EFFECT.ADD_STAT,stat:"speed",value:12}]},
+  burn:{id:"burn",name:"Burning",icon:"♨",duration:3,tick:{type:"damage",amount:6}},
+  poison:{id:"poison",name:"Poison",icon:"☣",duration:4,tick:{type:"damage",amount:4}},
+  focus:{id:"focus",name:"Focused",icon:"✦",duration:3,effects:[{type:EFFECT.ADD_STAT,stat:"magic",value:10}]},
+  stunned:{id:"stunned",name:"Stunned",icon:"✹",duration:1},
+  hexed:{id:"hexed",name:"Hexed",icon:"◈",duration:3,effects:[{type:EFFECT.ADD_STAT,stat:"defense",value:-6}]}
+};
+
+const TALENTS=[
+  {id:"core",name:"Awaken",icon:"◆",x:50,y:88,cost:0,requires:[],description:"The root of the Runebound discipline.",effects:[{type:EFFECT.ADD_MAX,resource:"health",value:10}]},
+  {id:"force",name:"Force",icon:"⚔",x:24,y:68,cost:1,requires:["core"],description:"Physical momentum becomes real combat power.",effects:[{type:EFFECT.ADD_STAT,stat:"power",value:6}]},
+  {id:"ward",name:"Ward",icon:"⬡",x:76,y:68,cost:1,requires:["core"],description:"Hardens armor and guarding.",effects:[{type:EFFECT.ADD_STAT,stat:"defense",value:7}]},
+  {id:"trailcraft",name:"Trailcraft",icon:"⌁",x:16,y:43,cost:1,requires:["force"],description:"Reduces all non-lake terrain stamina costs by one.",effects:[{type:EFFECT.ADD_TRIGGER,trigger:"trailcraft",value:1}]},
+  {id:"rush",name:"Rush",icon:"➟",x:39,y:43,cost:1,requires:["force"],description:"Increases initiative speed.",effects:[{type:EFFECT.ADD_STAT,stat:"speed",value:8}]},
+  {id:"focus",name:"Focus",icon:"✦",x:62,y:43,cost:1,requires:["ward"],description:"Concentrated mana increases magic.",effects:[{type:EFFECT.ADD_STAT,stat:"magic",value:9}]},
+  {id:"forager",name:"Forager",icon:"❧",x:85,y:43,cost:1,requires:["ward"],description:"Gathering yields an additional item.",effects:[{type:EFFECT.ADD_TRIGGER,trigger:"forager",value:1}]},
+  {id:"execution",name:"Execution",icon:"☄",x:25,y:17,cost:2,requires:["trailcraft","rush"],description:"Low-health enemies take more damage.",effects:[{type:EFFECT.ADD_TRIGGER,trigger:"execute",value:.3}]},
+  {id:"runestorm",name:"Runestorm",icon:"✺",x:50,y:11,cost:3,requires:["rush","focus"],description:"Unlocks a full-enemy ultimate.",effects:[{type:EFFECT.GRANT_ABILITY,ability:"runestorm"}]},
+  {id:"sanctuary",name:"Sanctuary",icon:"⌂",x:75,y:17,cost:2,requires:["focus","forager"],description:"Unlocks party healing and warding.",effects:[{type:EFFECT.GRANT_ABILITY,ability:"sanctuary"}]}
+];
+
+const ITEM_LIBRARY={
+  aetherblade:{definitionId:"aetherblade",type:"sword",name:"Aetherblade",rarity:"rare",value:180,effects:[{type:EFFECT.ADD_STAT,stat:"power",value:12},{type:EFFECT.ADD_STAT,stat:"speed",value:-1}]},
+  moonstaff:{definitionId:"moonstaff",type:"staff",name:"Moon Staff",rarity:"epic",value:260,effects:[{type:EFFECT.ADD_STAT,stat:"magic",value:18},{type:EFFECT.ADD_STAT,stat:"power",value:3}]},
+  emberbow:{definitionId:"emberbow",type:"bow",name:"Ember Bow",rarity:"rare",value:170,effects:[{type:EFFECT.ADD_STAT,stat:"power",value:8},{type:EFFECT.ADD_STAT,stat:"speed",value:5}]},
+  sunShield:{definitionId:"sun-shield",type:"shield",name:"Sun Shield",rarity:"rare",value:150,effects:[{type:EFFECT.ADD_STAT,stat:"defense",value:12}]},
+  wardplate:{definitionId:"wardplate",type:"armor",name:"Wardplate",rarity:"rare",value:240,effects:[{type:EFFECT.ADD_STAT,stat:"defense",value:16}]},
+  openHelm:{definitionId:"open-helm",type:"helm",name:"Open Helm",rarity:"uncommon",value:85,effects:[{type:EFFECT.ADD_STAT,stat:"defense",value:4}]},
+  sunRing:{definitionId:"sun-ring",type:"ring",name:"Sun Ring",rarity:"legendary",value:420,effects:[{type:EFFECT.ADD_STAT,stat:"magic",value:7},{type:EFFECT.ADD_STAT,stat:"defense",value:4}]},
+  travelerCloak:{definitionId:"traveler-cloak",type:"cloak",name:"Traveler Cloak",rarity:"common",value:34,effects:[{type:EFFECT.ADD_STAT,stat:"speed",value:2}]},
+  healthTonic:{definitionId:"health-tonic",type:"potion",name:"Health Tonic",rarity:"uncommon",value:28,effects:[{type:EFFECT.HEAL,amount:35}]},
+  ore:{definitionId:"iron-ore",type:"ore",name:"Iron Ore",rarity:"common",value:9,effects:[]},
+  herb:{definitionId:"moon-herb",type:"herb",name:"Moon Herb",rarity:"uncommon",value:14,effects:[]},
+  gem:{definitionId:"arc-gem",type:"gem",name:"Arc Gem",rarity:"epic",value:85,effects:[]},
+  relic:{definitionId:"moonfen-relic",type:"relic",name:"Moonfen Relic",rarity:"legendary",value:0,effects:[],questItem:true},
+  invitation:{definitionId:"ash-invitation",type:"book",name:"Ash Court Invitation",rarity:"rare",value:0,effects:[],questItem:true}
+};
+
+const ABILITIES={
+  strike:{id:"strike",name:"Strike",cost:0,resource:null,target:"enemy",description:"Reliable physical attack.",resolve:(actor,target,ctx)=>ctx.damage(target,10+actor.power*.42,"physical")},
+  guard:{id:"guard",name:"Guard",cost:0,resource:null,target:"self",description:"Gain guard based on defense.",resolve:(actor,target,ctx)=>{actor.guard=Math.round(10+actor.defense*.32);ctx.log(`${actor.name} braces for ${actor.guard} guard.`);ctx.event("GUARD_APPLIED",{target:actor.id,amount:actor.guard})}},
+  tonic:{id:"tonic",name:"Health Tonic",cost:1,resource:"item",target:"ally",description:"Consume one tonic to heal an ally.",validate:()=>itemCount("health-tonic")>0,resolve:(actor,target,ctx)=>{removeItemByDefinition("health-tonic",1);ctx.heal(target,35);ctx.event("ITEM_USED",{definitionId:"health-tonic",target:target.id})}},
+  runeCleave:{id:"runeCleave",name:"Rune Cleave",cost:12,resource:"mana",target:"enemy",description:"Heavy attack that splashes into a second enemy.",resolve:(actor,target,ctx)=>{ctx.damage(target,15+actor.power*.5,"physical");ctx.enemies().filter(unit=>unit.id!==target.id).slice(0,1).forEach(unit=>ctx.damage(unit,Math.round(7+actor.power*.2),"physical"))}},
+  arcLance:{id:"arcLance",name:"Arc Lance",cost:14,resource:"mana",target:"enemy",description:"High magic damage and applies Hexed.",resolve:(actor,target,ctx)=>{ctx.damage(target,18+actor.magic*.52,"arcane");ctx.status(target,"hexed",3)}},
+  shieldBash:{id:"shieldBash",name:"Shield Bash",cost:8,resource:"mana",target:"enemy",description:"Defense-scaled impact with stun.",resolve:(actor,target,ctx)=>{ctx.damage(target,11+actor.defense*.35,"physical");ctx.status(target,"stunned",1)}},
+  mend:{id:"mend",name:"Mend",cost:12,resource:"mana",target:"ally",description:"Restore an ally using magic.",resolve:(actor,target,ctx)=>ctx.heal(target,20+actor.magic*.42)},
+  provoke:{id:"provoke",name:"Provoke",cost:6,resource:"mana",target:"enemy",description:"Damage an enemy and mark Tor as protector.",resolve:(actor,target,ctx)=>{ctx.damage(target,8+actor.power*.25,"physical");actor.protecting=true;ctx.log(`${actor.name} draws enemy attention.`)}},
+  runestorm:{id:"runestorm",name:"Runestorm",cost:26,resource:"mana",target:"all-enemies",description:"Damage every enemy.",resolve:(actor,target,ctx)=>ctx.enemies().forEach(enemy=>ctx.damage(enemy,17+actor.power*.24+actor.magic*.26,"runic"))},
+  sanctuary:{id:"sanctuary",name:"Sanctuary",cost:24,resource:"mana",target:"all-allies",description:"Heal and ward every ally.",resolve:(actor,target,ctx)=>ctx.allies().forEach(ally=>{ctx.heal(ally,16+actor.magic*.22);ctx.status(ally,"ward",2)})},
+  cinderLunge:{id:"cinderLunge",name:"Cinder Lunge",cost:0,resource:null,target:"enemy",description:"Heavy enemy strike.",resolve:(actor,target,ctx)=>{ctx.damage(target,16+actor.power*.42,"fire");if(ctx.random()>.58)ctx.status(target,"burn",3)}},
+  rendingBite:{id:"rendingBite",name:"Rending Bite",cost:0,resource:null,target:"enemy",description:"Fast physical attack.",resolve:(actor,target,ctx)=>ctx.damage(target,13+actor.power*.35,"physical")},
+  hexBolt:{id:"hexBolt",name:"Hex Bolt",cost:8,resource:"mana",target:"enemy",description:"Arcane damage and Hexed.",resolve:(actor,target,ctx)=>{ctx.damage(target,13+actor.magic*.42,"arcane");ctx.status(target,"hexed",3)}},
+  mireSpit:{id:"mireSpit",name:"Mire Spit",cost:0,resource:null,target:"enemy",description:"Poisoning swamp attack.",resolve:(actor,target,ctx)=>{ctx.damage(target,8+actor.power*.24,"poison");ctx.status(target,"poison",4)}},
+  stoneCrash:{id:"stoneCrash",name:"Stone Crash",cost:0,resource:null,target:"enemy",description:"Mountain brute attack.",resolve:(actor,target,ctx)=>ctx.damage(target,18+actor.power*.48,"physical")},
+  sandHex:{id:"sandHex",name:"Sand Hex",cost:7,resource:"mana",target:"enemy",description:"Desert magic lowers defense.",resolve:(actor,target,ctx)=>{ctx.damage(target,10+actor.magic*.35,"arcane");ctx.status(target,"hexed",3)}}
+};
+
+const ENCOUNTERS={
+  grass:{id:"grass",name:"Field Ambush",xp:45,gold:20,enemies:["hound"]},
+  forest:{id:"forest",name:"Forest Hunt",xp:55,gold:24,enemies:["hound","hound"]},
+  swamp:{id:"swamp",name:"Mire Stalkers",xp:62,gold:26,enemies:["mire","mire"]},
+  mountain:{id:"mountain",name:"Stonebound",xp:72,gold:32,enemies:["stone"]},
+  desert:{id:"desert",name:"Dune Hexers",xp:68,gold:30,enemies:["seer","dune"]},
+  elite:{id:"elite",name:"Cinderwatch Elite",xp:130,gold:75,enemies:["hound","seer","stone"]}
+};
+
+const LOCATION_DEFS={
+  verge:{
+    id:"verge",
+    name:"Whispering Verge",
+    kind:"settlement",
+    rooms:[
+      {id:"gate",name:"Western Gate",description:"A warded stone gate overlooking the wilds.",actions:["talk-serin","rest"]},
+      {id:"square",name:"Market Square",description:"Travelers trade supplies beneath faded banners.",actions:["open-market","gather-rumors"]},
+      {id:"inn",name:"Wayfarer Inn",description:"A safe room where the party can fully recover.",actions:["rest"]}
+    ]
+  },
+  moonfen:{
+    id:"moonfen",
+    name:"Moonfen Shrine",
+    kind:"shrine",
+    rooms:[
+      {id:"threshold",name:"Flooded Threshold",description:"Cold water mirrors runes carved into black stone.",actions:["inspect-shrine"]},
+      {id:"sanctum",name:"Moonlit Sanctum",description:"A circular chamber hums around an empty relic cradle.",actions:["recover-relic","talk-spirit"]}
+    ]
+  },
+  cinderwatch:{
+    id:"cinderwatch",
+    name:"Cinderwatch Ruin",
+    kind:"ruin",
+    rooms:[
+      {id:"courtyard",name:"Collapsed Courtyard",description:"Broken masonry forms a defensible ring.",actions:["elite-encounter"]},
+      {id:"archive",name:"Ash Archive",description:"Charred records remain beneath a collapsed vault.",actions:["recover-invitation"]}
+    ]
+  },
+  rest:{
+    id:"rest",
+    name:"Wayfarer's Rest",
+    kind:"camp",
+    rooms:[
+      {id:"camp",name:"Travel Camp",description:"A protected fire ring and trader wagon.",actions:["rest","open-market"]}
+    ]
+  }
+};
+
+const NPC_DEFS={
+  serin:{id:"serin",name:"Gatekeeper Serin",role:"Valley Warden",glyph:"S",locationId:"verge",room:"gate",dialogue:"serin-start"},
+  herbalist:{id:"herbalist",name:"Mara the Herbalist",role:"Field Apothecary",glyph:"M",locationId:"verge",room:"square",dialogue:"mara-start"},
+  merchant:{id:"merchant",name:"Orin Vale",role:"Travel Merchant",glyph:"O",locationId:"rest",room:"camp",dialogue:"merchant-start"},
+  spirit:{id:"spirit",name:"Moonfen Echo",role:"Shrine Spirit",glyph:"✦",locationId:"moonfen",room:"sanctum",dialogue:"spirit-start"},
+  scout:{id:"scout",name:"Ash Scout Keryn",role:"Ruin Observer",glyph:"K",locationId:"cinderwatch",room:"archive",dialogue:"scout-start"}
+};
+
+const DIALOGUE={
+  "serin-start":{speaker:"serin",line:"The paths beyond the Verge are awake again. What have you found?",choices:[
+    {text:"Ask about Moonfen Shrine.",to:"serin-moonfen"},
+    {text:"Present the Moonfen Relic.",to:"serin-relic",conditions:[{type:"ITEM",id:"moonfen-relic",amount:1}],effects:[{type:"FACTION",id:"valley",amount:25},{type:"EVENT",event:"RELIC_RETURNED"}]},
+    {text:"Request passage advice.",to:"serin-advice"}
+  ]},
+  "serin-moonfen":{speaker:"serin",line:"The shrine lies east of the low marsh. Find its sanctum and return what was taken.",choices:[{text:"I will recover it.",to:"serin-start",effects:[{type:"EVENT",event:"QUEST_ACCEPTED",payload:{id:"moonfen"}}]}]},
+  "serin-relic":{speaker:"serin",line:"The valley remembers deeds more clearly than promises. You may pass as an ally.",choices:[{text:"Continue.",to:"serin-start"}]},
+  "serin-advice":{speaker:"serin",line:"Mountains expose danger early. Swamps conceal it until the last step. Keep stamina in reserve.",choices:[{text:"Understood.",to:"serin-start"}]},
+  "mara-start":{speaker:"herbalist",line:"Moon Herb grows in grass, forest, and swamp. Five bundles would restock my field kit.",choices:[
+    {text:"Deliver five Moon Herbs.",to:"mara-thanks",conditions:[{type:"ITEM",id:"moon-herb",amount:5}],effects:[{type:"REMOVE_ITEM",id:"moon-herb",amount:5},{type:"GOLD",amount:40},{type:"EVENT",event:"HERBS_DELIVERED"}]},
+    {text:"Ask where it grows.",to:"mara-tip"}
+  ]},
+  "mara-tip":{speaker:"herbalist",line:"Forests yield more when you know what to cut. The Forager talent helps.",choices:[{text:"Return.",to:"mara-start"}]},
+  "mara-thanks":{speaker:"herbalist",line:"This will keep three patrols alive. Take the payment.",choices:[{text:"Return.",to:"mara-start"}]},
+  "merchant-start":{speaker:"merchant",line:"My stock changes with every market day. Valley favor lowers my prices.",choices:[{text:"Open the market.",to:"merchant-start",effects:[{type:"EVENT",event:"MARKET_OPENED"}]},{text:"Ask about the road ahead.",to:"merchant-tip"}]},
+  "merchant-tip":{speaker:"merchant",line:"There are no roads worth trusting. Follow landmarks, not promises.",choices:[{text:"Return.",to:"merchant-start"}]},
+  "spirit-start":{speaker:"spirit",line:"The relic cradle is empty, yet its echo remains within the sanctum.",choices:[{text:"Ask what the relic protects.",to:"spirit-lore"},{text:"Return.",to:"spirit-start"}]},
+  "spirit-lore":{speaker:"spirit",line:"It steadies the boundary between memory and hunger. Remove it only to restore it.",choices:[{text:"Return.",to:"spirit-start"}]},
+  "scout-start":{speaker:"scout",line:"The Ash Court left an invitation in the archive. Someone expects you to choose a side.",choices:[{text:"Ask who sent it.",to:"scout-lore"},{text:"Return.",to:"scout-start"}]},
+  "scout-lore":{speaker:"scout",line:"The seal belongs to no living courtier I know. That is what worries me.",choices:[{text:"Return.",to:"scout-start"}]}
+};
+
+const QUEST_DEFS=[
+  {
+    id:"moonfen",
+    title:"The Moonfen Relic",
+    type:"main",
+    description:"Reach Moonfen Shrine, recover the relic, and return it to Gatekeeper Serin.",
+    objectives:[
+      {id:"discover",text:"Discover Moonfen Shrine",event:"LANDMARK_DISCOVERED",where:{locationId:"moonfen"},target:1},
+      {id:"recover",text:"Recover the Moonfen Relic",event:"ITEM_GAINED",where:{definitionId:"moonfen-relic"},target:1},
+      {id:"return",text:"Return the relic to Serin",event:"RELIC_RETURNED",where:{},target:1}
+    ],
+    rewards:[{type:"XP",amount:280},{type:"FACTION",id:"valley",amount:20}]
+  },
+  {
+    id:"herbalist",
+    title:"Medicine for the Verge",
+    type:"side",
+    description:"Gather Moon Herbs and deliver five bundles to Mara.",
+    objectives:[
+      {id:"gather",text:"Gather Moon Herbs",event:"ITEM_GAINED",where:{definitionId:"moon-herb"},target:5,useAmount:true},
+      {id:"deliver",text:"Deliver the herb bundle",event:"HERBS_DELIVERED",where:{},target:1}
+    ],
+    rewards:[{type:"XP",amount:75},{type:"GOLD",amount:40}]
+  },
+  {
+    id:"ashcourt",
+    title:"An Ashen Invitation",
+    type:"side",
+    description:"Investigate Cinderwatch Ruin and recover the invitation hidden in its archive.",
+    objectives:[
+      {id:"discover",text:"Discover Cinderwatch Ruin",event:"LANDMARK_DISCOVERED",where:{locationId:"cinderwatch"},target:1},
+      {id:"defeat",text:"Defeat the Cinderwatch elite",event:"COMBAT_VICTORY",where:{encounter:"elite"},target:1},
+      {id:"recover",text:"Recover the Ash Court invitation",event:"ITEM_GAINED",where:{definitionId:"ash-invitation"},target:1}
+    ],
+    rewards:[{type:"XP",amount:160},{type:"FACTION",id:"emberGuild",amount:8},{type:"FACTION",id:"ashCourt",amount:-10}]
+  }
+];
+
+/* ========================================================================== */
+/* SECTION 03 — AUTHORITATIVE STATE                                            */
+/* ========================================================================== */
+
+const INITIAL_STATE={
+  version:6,
+  meta:{uid:100,createdAt:new Date().toISOString()},
+  character:{
+    name:"Aven Rhyl",
+    race:"Human",
+    className:"Runebound Vanguard",
+    level:12,
+    xp:34,
+    skin:"#d6a47d",
+    hair:"#3b251d",
+    attributes:{might:15,finesse:11,intellect:12,resolve:14},
+    resources:{
+      health:{current:82,baseMax:100},
+      mana:{current:64,baseMax:100},
+      stamina:{current:91,baseMax:100}
+    },
+    equipment:{armor:"item-armor",weapon:"item-sword",helmet:"item-helm",offhand:"item-shield",ring:"item-ring",cloak:"item-cloak"},
+    statuses:[{id:"ward",remaining:2}]
+  },
+  inventory:{
+    capacity:20,
+    items:[
+      {...ITEM_LIBRARY.aetherblade,instanceId:"item-sword",qty:1},
+      {...ITEM_LIBRARY.wardplate,instanceId:"item-armor",qty:1},
+      {...ITEM_LIBRARY.openHelm,instanceId:"item-helm",qty:1},
+      {...ITEM_LIBRARY.sunShield,instanceId:"item-shield",qty:1},
+      {...ITEM_LIBRARY.sunRing,instanceId:"item-ring",qty:1},
+      {...ITEM_LIBRARY.travelerCloak,instanceId:"item-cloak",qty:1},
+      {...ITEM_LIBRARY.healthTonic,instanceId:"item-tonic",qty:3},
+      {...ITEM_LIBRARY.ore,instanceId:"item-ore",qty:7},
+      {...ITEM_LIBRARY.herb,instanceId:"item-herb",qty:2},
+      {...ITEM_LIBRARY.gem,instanceId:"item-gem",qty:2}
+    ]
+  },
+  talents:{points:6,unlocked:["core"]},
+  party:{members:["aven","lyra","tor"],formation:{aven:6,lyra:7,tor:3},selectedFormation:null},
+  world:{
+    seed:"EMBER-7451",
+    cols:42,
+    rows:32,
+    tiles:[],
+    visible:[],
+    visited:[],
+    player:{x:12,y:9},
+    facing:"north",
+    steps:0,
+    landmarks:[],
+    discoveredLandmarks:[],
+    npcs:[],
+    encounters:[],
+    interior:null,
+    weather:"clear",
+    time:8,
+    route:[]
+  },
+  dialogue:{activeNpc:null,node:null,visited:[],flags:{}},
+  quests:{},
+  factions:{valley:20,emberGuild:10,ashCourt:-15},
+  wallet:420,
+  market:{day:1,stock:[
+    {definitionId:"moon-herb",name:"Moon Herb",base:14,stock:8,demand:1.1},
+    {definitionId:"iron-ore",name:"Iron Ore",base:9,stock:12,demand:.9},
+    {definitionId:"arc-gem",name:"Arc Gem",base:85,stock:2,demand:1.35},
+    {definitionId:"health-tonic",name:"Health Tonic",base:28,stock:5,demand:1.05}
+  ],history:[44,48,46,52,57,54,61,59,66,64]},
+  combat:{active:false,result:null,encounter:null,worldEncounterId:null,round:1,index:0,queue:[],pending:null,busy:false,seed:0,units:[],log:[]},
+  loot:{counter:1,current:null},
+  director:{aggression:55,alert:0,recentVictories:0},
+  telemetry:[]
+};
+
+let state=deepClone(INITIAL_STATE);
+let selectedItemId=state.inventory.items[0].instanceId;
+let selectedTalentId="core";
+let selectedQuestId="moonfen";
+let selectedNpcId=null;
+const subscribers=new Set();
+
+function uid(prefix="id"){
+  state.meta.uid+=1;
+  return`${prefix}-${state.meta.uid}-${Date.now().toString(36)}`;
+}
+
+function domainEvent(type,payload={}){
+  return{type,payload,time:new Date().toISOString()};
+}
+
+function subscribe(callback){
+  subscribers.add(callback);
+  return()=>subscribers.delete(callback);
+}
+
+function publish(event){
+  state.telemetry.push(event);
+  if(state.telemetry.length>160)state.telemetry.splice(0,state.telemetry.length-160);
+  processQuestEvent(event);
+  subscribers.forEach(callback=>{
+    try{callback(event)}catch(error){console.error("Subscriber error",error)}
+  });
+}
+
+function dispatch(type,payload={}){
+  const events=[];
+  reduceCommand(type,payload,events);
+  events.forEach(publish);
+  renderAll();
+}
+
+/* ========================================================================== */
+/* SECTION 04 — EFFECTS, STATS, INVENTORY                                      */
+/* ========================================================================== */
+
+function allEffects(){
+  const equippedIds=Object.values(state.character.equipment).filter(Boolean);
+  const equippedItems=equippedIds.map(id=>state.inventory.items.find(item=>item.instanceId===id)).filter(Boolean);
+  const talentEffects=TALENTS.filter(talent=>state.talents.unlocked.includes(talent.id)).flatMap(talent=>talent.effects||[]);
+  const statusEffects=state.character.statuses.flatMap(status=>STATUS_DEFS[status.id]?.effects||[]);
+  return[...equippedItems.flatMap(item=>item.effects||[]),...talentEffects,...statusEffects];
+}
+
+function derived(){
+  const attributes=state.character.attributes;
+  const stats={
+    power:attributes.might*2.2+attributes.finesse*.7,
+    defense:attributes.resolve*2+state.character.level*1.4,
+    magic:attributes.intellect*2.3+attributes.resolve*.5,
+    speed:80+attributes.finesse*1.6
+  };
+  const max={
+    health:state.character.resources.health.baseMax,
+    mana:state.character.resources.mana.baseMax,
+    stamina:state.character.resources.stamina.baseMax
+  };
+  const abilities=new Set(["strike","guard","tonic","runeCleave"]);
+  const triggers={};
+  for(const effect of allEffects()){
+    if(effect.type===EFFECT.ADD_STAT)stats[effect.stat]=(stats[effect.stat]||0)+effect.value;
+    if(effect.type===EFFECT.ADD_MAX)max[effect.resource]=(max[effect.resource]||0)+effect.value;
+    if(effect.type===EFFECT.GRANT_ABILITY)abilities.add(effect.ability);
+    if(effect.type===EFFECT.ADD_TRIGGER)triggers[effect.trigger]=(triggers[effect.trigger]||0)+effect.value;
+  }
+  return{
+    stats:Object.fromEntries(Object.entries(stats).map(([key,value])=>[key,Math.round(value)])),
+    max,
+    abilities:[...abilities],
+    triggers
+  };
+}
+
+function resourceMax(key){
+  return derived().max[key]||100;
+}
+
+function itemCount(definitionId){
+  return state.inventory.items.filter(item=>item.definitionId===definitionId).reduce((sum,item)=>sum+item.qty,0);
+}
+
+function addItem(item,amount,events){
+  const stackable=["ore","herb","gem","potion"].includes(item.type);
+  const existing=stackable&&state.inventory.items.find(entry=>entry.definitionId===item.definitionId);
+  if(!existing&&state.inventory.items.length>=state.inventory.capacity){
+    toast("Inventory is full");
+    return false;
+  }
+  if(existing)existing.qty+=amount;
+  else state.inventory.items.push({...deepClone(item),instanceId:item.instanceId||uid("item"),qty:amount});
+  events.push(domainEvent("ITEM_GAINED",{definitionId:item.definitionId,amount}));
+  return true;
+}
+
+function removeItemByDefinition(definitionId,amount){
+  for(const item of [...state.inventory.items]){
+    if(item.definitionId!==definitionId)continue;
+    const used=Math.min(item.qty,amount);
+    item.qty-=used;
+    amount-=used;
+    if(item.qty<=0){
+      for(const [slot,value] of Object.entries(state.character.equipment))if(value===item.instanceId)state.character.equipment[slot]=null;
+      state.inventory.items=state.inventory.items.filter(entry=>entry!==item);
+    }
+    if(amount<=0)break;
+  }
+}
+
+function equipItem(instanceId,events){
+  const item=state.inventory.items.find(entry=>entry.instanceId===instanceId);
+  const slot=item&&ITEM_SLOT[item.type];
+  if(!item||!slot)return;
+  state.character.equipment[slot]=instanceId;
+  events.push(domainEvent("ITEM_EQUIPPED",{instanceId,slot,definitionId:item.definitionId}));
+}
+
+function useItem(instanceId,events){
+  const item=state.inventory.items.find(entry=>entry.instanceId===instanceId);
+  if(!item)return;
+  const heal=item.effects?.find(effect=>effect.type===EFFECT.HEAL);
+  if(heal){
+    const resource=state.character.resources.health;
+    resource.current=clamp(resource.current+heal.amount,0,resourceMax("health"));
+    removeItemByDefinition(item.definitionId,1);
+    events.push(domainEvent("HEAL_APPLIED",{source:item.name,amount:heal.amount,target:"aven"}));
+    events.push(domainEvent("ITEM_USED",{definitionId:item.definitionId}));
+  }
+}
+
+function grantXP(amount,events){
+  state.character.xp+=amount;
+  events.push(domainEvent("XP_GAINED",{amount}));
+  while(state.character.xp>=100){
+    state.character.xp-=100;
+    state.character.level+=1;
+    state.talents.points+=1;
+    events.push(domainEvent("CHARACTER_LEVEL_UP",{level:state.character.level}));
+  }
+}
+
+function addStatus(target,id,duration,events){
+  const list=target==="aven"?state.character.statuses:target.statuses;
+  const existing=list.find(status=>status.id===id);
+  if(existing)existing.remaining=Math.max(existing.remaining,duration||STATUS_DEFS[id]?.duration||1);
+  else list.push({id,remaining:duration||STATUS_DEFS[id]?.duration||1});
+  events.push(domainEvent("STATUS_APPLIED",{target:target.id||target,id,duration:duration||STATUS_DEFS[id]?.duration||1}));
+}
+
+function unlockTalent(id,events){
+  const talent=TALENTS.find(entry=>entry.id===id);
+  if(!talent||state.talents.unlocked.includes(id))return;
+  if(!talent.requires.every(requirement=>state.talents.unlocked.includes(requirement)))return;
+  if(state.talents.points<talent.cost)return;
+  state.talents.points-=talent.cost;
+  state.talents.unlocked.push(id);
+  events.push(domainEvent("TALENT_UNLOCKED",{id}));
+}
+
+/* ========================================================================== */
+/* SECTION 05 — WORLD GENERATION AND PERSISTENCE                               */
+/* ========================================================================== */
+
+const WORLD_COLS=42;
+const WORLD_ROWS=32;
+const facingVectors={
+  north:{x:0,y:-1,rotation:0,label:"North"},
+  east:{x:1,y:0,rotation:90,label:"East"},
+  south:{x:0,y:1,rotation:180,label:"South"},
+  west:{x:-1,y:0,rotation:270,label:"West"}
+};
+
+const worldRuntime={
+  mapCanvas:null,
+  mapCtx:null,
+  mapWidth:0,
+  mapHeight:0,
+  mapDpr:1,
+  viewCanvas:null,
+  viewCtx:null,
+  viewWidth:0,
+  viewHeight:0,
+  viewDpr:1,
+  tileSize:30,
+  camera:{x:0,y:0},
+  targetCamera:{x:0,y:0},
+  routeOrigin:0,
+  routeClock:0,
+  sceneTime:0,
+  sceneTransition:0
+};
+
+function windex(x,y){
+  return y*state.world.cols+x;
+}
+
+function inWorld(x,y){
+  return x>=0&&y>=0&&x<state.world.cols&&y<state.world.rows;
+}
+
+function terrainAt(x,y){
+  return inWorld(x,y)?TERRAIN_BY_ID[state.world.tiles[windex(x,y)]]:null;
+}
+
+function latticeNoise(x,y,seed){
+  let number=Math.imul(x+374761393,668265263)^Math.imul(y+1442695041,2246822519)^seed;
+  number=Math.imul(number^(number>>>13),1274126177);
+  return((number^(number>>>16))>>>0)/4294967295;
+}
+
+function smoothstep(value){
+  return value*value*(3-2*value);
+}
+
+function valueNoise(x,y,scale,seed){
+  const sx=x/scale;
+  const sy=y/scale;
+  const x0=Math.floor(sx);
+  const y0=Math.floor(sy);
+  const tx=smoothstep(sx-x0);
+  const ty=smoothstep(sy-y0);
+  const a=latticeNoise(x0,y0,seed);
+  const b=latticeNoise(x0+1,y0,seed);
+  const c=latticeNoise(x0,y0+1,seed);
+  const d=latticeNoise(x0+1,y0+1,seed);
+  return lerp(lerp(a,b,tx),lerp(c,d,tx),ty);
+}
+
+function stampTerrain(key,cx,cy,radius,seed,tiles){
+  const id=TERRAIN[key].id;
+  for(let y=Math.max(1,cy-radius);y<=Math.min(WORLD_ROWS-2,cy+radius);y+=1){
+    for(let x=Math.max(1,cx-radius);x<=Math.min(WORLD_COLS-2,cx+radius);x+=1){
+      const distance=Math.hypot(x-cx,y-cy);
+      if(distance<=radius*(.76+latticeNoise(x,y,seed)*.38))tiles[y*WORLD_COLS+x]=id;
+    }
+  }
+}
+
+function nearestWalkable(tiles,x,y){
+  for(let radius=0;radius<12;radius+=1){
+    for(let dy=-radius;dy<=radius;dy+=1){
+      for(let dx=-radius;dx<=radius;dx+=1){
+        const px=clamp(x+dx,1,WORLD_COLS-2);
+        const py=clamp(y+dy,1,WORLD_ROWS-2);
+        if(TERRAIN_BY_ID[tiles[py*WORLD_COLS+px]]?.walk)return{x:px,y:py};
+      }
+    }
+  }
+  return{x:12,y:9};
+}
+
+function generateWorld(seedText,events=[]){
+  const seed=String(seedText||"EMBER-7451").trim().toUpperCase()||"EMBER-7451";
+  const seedNumber=hashString(seed);
+  const random=mulberry32(seedNumber);
+  const tiles=Array(WORLD_COLS*WORLD_ROWS).fill(TERRAIN.grass.id);
+  for(let y=0;y<WORLD_ROWS;y+=1){
+    for(let x=0;x<WORLD_COLS;x+=1){
+      const elevation=valueNoise(x,y,7.5,seedNumber)*.68+valueNoise(x,y,2.8,seedNumber^0x92af31)*.32;
+      const moisture=valueNoise(x+20,y-10,8.5,seedNumber^0x51f15e)*.7+valueNoise(x,y,2.4,seedNumber^0x6aa9)*.3;
+      const heat=valueNoise(x-15,y+23,11,seedNumber^0xd34db33f)*.75+valueNoise(x,y,4,seedNumber^0x1995)*.25;
+      const rough=valueNoise(x+4,y+8,4.8,seedNumber^0x77ad)*.65+valueNoise(x,y,2,seedNumber^0x4221)*.35;
+      let type="grass";
+      if(elevation<.225)type="lake";
+      else if(elevation>.79||rough>.87)type="mountain";
+      else if(moisture>.72&&elevation<.5)type="swamp";
+      else if(moisture>.59)type="forest";
+      else if(moisture<.29&&heat>.48)type="desert";
+      tiles[y*WORLD_COLS+x]=TERRAIN[type].id;
+    }
+  }
+  stampTerrain("grass",12,9,4,seedNumber^44,tiles);
+  const landmarkPlan=[
+    {id:"verge",name:"Whispering Verge",kind:"settlement",point:{x:12,y:9}},
+    {id:"moonfen",name:"Moonfen Shrine",kind:"shrine",point:{x:26,y:8}},
+    {id:"cinderwatch",name:"Cinderwatch Ruin",kind:"ruin",point:{x:31,y:23}},
+    {id:"rest",name:"Wayfarer's Rest",kind:"camp",point:{x:18,y:22}}
+  ];
+  const landmarks=landmarkPlan.map(plan=>{
+    const point=nearestWalkable(tiles,plan.point.x+Math.floor((random()-.5)*5),plan.point.y+Math.floor((random()-.5)*5));
+    return{...plan,x:point.x,y:point.y,discovered:false};
+  });
+  const verge=landmarks.find(item=>item.id==="verge");
+  const npcs=Object.values(NPC_DEFS).map(definition=>{
+    const landmark=landmarks.find(item=>item.id===definition.locationId);
+    return{id:definition.id,x:landmark.x,y:landmark.y,locationId:definition.locationId,room:definition.room,active:true,met:false};
+  });
+  const encounters=[];
+  for(let index=0;index<24;index+=1){
+    for(let attempt=0;attempt<100;attempt+=1){
+      const x=2+Math.floor(random()*(WORLD_COLS-4));
+      const y=2+Math.floor(random()*(WORLD_ROWS-4));
+      const terrain=TERRAIN_BY_ID[tiles[y*WORLD_COLS+x]];
+      if(!terrain.walk)continue;
+      if(landmarks.some(mark=>Math.hypot(mark.x-x,mark.y-y)<3))continue;
+      if(encounters.some(node=>Math.hypot(node.x-x,node.y-y)<2))continue;
+      encounters.push({id:`encounter-${index}`,x,y,terrain:terrain.key,encounterId:terrain.key,resolved:false,discovered:false});
+      break;
+    }
+  }
+  state.world={
+    seed,
+    cols:WORLD_COLS,
+    rows:WORLD_ROWS,
+    tiles,
+    visible:Array(WORLD_COLS*WORLD_ROWS).fill(0),
+    visited:Array(WORLD_COLS*WORLD_ROWS).fill(0),
+    player:{x:verge.x,y:verge.y},
+    facing:"north",
+    steps:0,
+    landmarks,
+    discoveredLandmarks:[],
+    npcs,
+    encounters,
+    interior:null,
+    weather:"clear",
+    time:8,
+    route:[]
+  };
+  revealWorld(verge.x,verge.y,4);
+  state.world.visited[windex(verge.x,verge.y)]=1;
+  verge.discovered=true;
+  state.world.discoveredLandmarks.push("verge");
+  centerMap(true);
+  worldRuntime.sceneTransition=1;
+  events.push(domainEvent("WORLD_GENERATED",{seed}));
+  events.push(domainEvent("LANDMARK_DISCOVERED",{locationId:"verge",name:verge.name}));
+}
+
+function revealWorld(cx,cy,radius=3){
+  for(let y=cy-radius;y<=cy+radius;y+=1){
+    for(let x=cx-radius;x<=cx+radius;x+=1){
+      if(inWorld(x,y)&&Math.hypot(x-cx,y-cy)<=radius+.35)state.world.visible[windex(x,y)]=1;
+    }
+  }
+}
+
+function currentLandmark(){
+  return state.world.landmarks.find(mark=>mark.x===state.world.player.x&&mark.y===state.world.player.y)||null;
+}
+
+function currentWorldNpc(){
+  if(state.world.interior){
+    return state.world.npcs.find(npc=>npc.locationId===state.world.interior.locationId&&npc.room===state.world.interior.room&&npc.active)||null;
+  }
+  return state.world.npcs.find(npc=>npc.x===state.world.player.x&&npc.y===state.world.player.y&&npc.active)||null;
+}
+
+function currentEncounterNode(){
+  return state.world.encounters.find(node=>node.x===state.world.player.x&&node.y===state.world.player.y&&!node.resolved)||null;
+}
+
+function terrainTravelCost(terrain){
+  const trailcraft=derived().triggers.trailcraft||0;
+  let cost=Math.max(1,terrain.cost-trailcraft);
+  if(terrain.key==="desert"&&state.character.resources.stamina.current<40)cost+=1;
+  return cost;
+}
+
+function processTerrainEntry(terrain,events){
+  const random=mulberry32(hashString(`${state.world.seed}:${state.world.player.x}:${state.world.player.y}:${state.world.steps}`));
+  if(terrain.key==="grass"&&!currentEncounterNode()){
+    state.character.resources.stamina.current=clamp(state.character.resources.stamina.current+1,0,resourceMax("stamina"));
+    events.push(domainEvent("TERRAIN_RECOVERY",{terrain:"grass",amount:1}));
+  }
+  if(terrain.key==="swamp"&&random()<.22){
+    addStatus("aven","poison",3,events);
+    toast("Swamp fumes apply Poison");
+  }
+  const node=currentEncounterNode();
+  if(node){
+    node.discovered=true;
+    events.push(domainEvent("ENCOUNTER_DISCOVERED",{id:node.id,terrain:node.terrain}));
+  }else{
+    const pressure=encounterPressure();
+    const chance=terrain.encounter*(.6+pressure/100*.7);
+    if(random()<chance&&state.world.steps>2){
+      const spawned={id:uid("encounter"),x:state.world.player.x,y:state.world.player.y,terrain:terrain.key,encounterId:terrain.key,resolved:false,discovered:true,dynamic:true};
+      state.world.encounters.push(spawned);
+      events.push(domainEvent("ENCOUNTER_SPAWNED",{id:spawned.id,terrain:terrain.key}));
+    }
+  }
+}
+
+function discoverCurrentLandmark(events){
+  const landmark=currentLandmark();
+  if(!landmark||landmark.discovered)return;
+  landmark.discovered=true;
+  if(!state.world.discoveredLandmarks.includes(landmark.id))state.world.discoveredLandmarks.push(landmark.id);
+  events.push(domainEvent("LANDMARK_DISCOVERED",{locationId:landmark.id,name:landmark.name}));
+  toast(`Discovered ${landmark.name}`);
+}
+
+function moveWorld(dx,dy,events){
+  if(state.world.interior){
+    toast("Exit the interior before traveling");
+    return;
+  }
+  if(state.combat.active&&!state.combat.result){
+    toast("Resolve combat before traveling");
+    return;
+  }
+  const facing=dx>0?"east":dx<0?"west":dy>0?"south":"north";
+  state.world.facing=facing;
+  const next={x:state.world.player.x+dx,y:state.world.player.y+dy};
+  const terrain=terrainAt(next.x,next.y);
+  if(!terrain?.walk){
+    worldRuntime.sceneTransition=.25;
+    events.push(domainEvent("WORLD_MOVE_BLOCKED",{...next,terrain:terrain?.key||"edge"}));
+    toast(`${terrain?.name||"World edge"} blocks the way`);
+    vibrate(25);
+    return;
+  }
+  const cost=terrainTravelCost(terrain);
+  if(state.character.resources.stamina.current<cost){
+    toast(`Need ${cost} stamina to enter ${terrain.name}`);
+    events.push(domainEvent("WORLD_MOVE_BLOCKED",{...next,reason:"stamina",cost}));
+    return;
+  }
+  state.character.resources.stamina.current-=cost;
+  state.world.player=next;
+  state.world.steps+=1;
+  state.world.visited[windex(next.x,next.y)]=1;
+  revealWorld(next.x,next.y,terrain.key==="mountain"?4:3);
+  centerMap(true);
+  worldRuntime.sceneTransition=1;
+  events.push(domainEvent("RESOURCE_CHANGED",{key:"stamina",amount:-cost,value:state.character.resources.stamina.current}));
+  events.push(domainEvent("WORLD_TILE_ENTERED",{...next,terrain:terrain.key,cost,step:state.world.steps}));
+  processTerrainEntry(terrain,events);
+  discoverCurrentLandmark(events);
+  const npc=currentWorldNpc();
+  if(npc)events.push(domainEvent("NPC_AVAILABLE",{id:npc.id,locationId:npc.locationId}));
+  const node=currentEncounterNode();
+  if(node)toast(`${ENCOUNTERS[node.encounterId]?.name||"Encounter"} detected`);
+}
+
+function worldNeighbors(node){
+  return[[1,0],[-1,0],[0,1],[0,-1]]
+    .map(([dx,dy])=>({x:node.x+dx,y:node.y+dy}))
+    .filter(point=>inWorld(point.x,point.y)&&terrainAt(point.x,point.y)?.walk&&state.world.visible[windex(point.x,point.y)]);
+}
+
+function findWorldPath(start,goal){
+  if(!inWorld(goal.x,goal.y)||!terrainAt(goal.x,goal.y)?.walk||!state.world.visible[windex(goal.x,goal.y)])return[];
+  const open=[{...start,g:0,f:Math.abs(goal.x-start.x)+Math.abs(goal.y-start.y)}];
+  const came=new Map();
+  const costs=new Map([[`${start.x},${start.y}`,0]]);
+  let expansions=0;
+  while(open.length&&expansions<2600){
+    open.sort((a,b)=>a.f-b.f);
+    const current=open.shift();
+    expansions+=1;
+    if(current.x===goal.x&&current.y===goal.y){
+      const path=[];
+      let key=`${goal.x},${goal.y}`;
+      let point={...goal};
+      while(key!==`${start.x},${start.y}`){
+        path.push(point);
+        point=came.get(key);
+        if(!point)return[];
+        key=`${point.x},${point.y}`;
+      }
+      return path.reverse();
+    }
+    for(const next of worldNeighbors(current)){
+      const key=`${next.x},${next.y}`;
+      const g=current.g+terrainTravelCost(terrainAt(next.x,next.y));
+      if(g<(costs.get(key)??Infinity)){
+        costs.set(key,g);
+        came.set(key,{x:current.x,y:current.y});
+        const h=Math.abs(goal.x-next.x)+Math.abs(goal.y-next.y);
+        const existing=open.find(item=>item.x===next.x&&item.y===next.y);
+        if(existing){existing.g=g;existing.f=g+h}
+        else open.push({...next,g,f:g+h});
+      }
+    }
+  }
+  return[];
+}
+
+function beginRoute(goal){
+  const route=findWorldPath(state.world.player,goal);
+  if(!route.length){
+    toast(state.world.visible[windex(goal.x,goal.y)]?"No safe visible route":"Explore closer terrain first");
+    return;
+  }
+  state.world.route=route;
+  worldRuntime.routeOrigin=route.length;
+  worldRuntime.routeClock=0;
+}
+
+function updateRoute(dt){
+  if(!state.world.route.length)return;
+  if(state.combat.active&&!state.combat.result){
+    state.world.route=[];
+    return;
+  }
+  worldRuntime.routeClock+=dt;
+  if(worldRuntime.routeClock<.18)return;
+  worldRuntime.routeClock=0;
+  const next=state.world.route.shift();
+  if(!next)return;
+  const events=[];
+  moveWorld(next.x-state.world.player.x,next.y-state.world.player.y,events);
+  events.forEach(publish);
+  if(currentEncounterNode())state.world.route=[];
+  renderAll();
+}
+
+function gatherCurrentTerrain(events){
+  const terrain=terrainAt(state.world.player.x,state.world.player.y);
+  if(!terrain?.gather){
+    toast("Nothing useful can be gathered here");
+    return;
+  }
+  const yieldAmount=1+(derived().triggers.forager||0);
+  const definition=Object.values(ITEM_LIBRARY).find(item=>item.definitionId===terrain.gather);
+  if(addItem(definition,yieldAmount,events)){
+    events.push(domainEvent("TERRAIN_GATHERED",{terrain:terrain.key,definitionId:terrain.gather,amount:yieldAmount}));
+    toast(`Gathered ${yieldAmount} ${definition.name}`);
+  }
+}
+
+function enterCurrentLocation(events){
+  const landmark=currentLandmark();
+  if(!landmark){
+    toast("No location entrance is present");
+    return;
+  }
+  const definition=LOCATION_DEFS[landmark.id];
+  if(!definition)return;
+  state.world.interior={locationId:landmark.id,room:definition.rooms[0].id};
+  state.dialogue.activeNpc=null;
+  state.dialogue.node=null;
+  events.push(domainEvent("LOCATION_ENTERED",{locationId:landmark.id,room:definition.rooms[0].id}));
+  toast(`Entered ${definition.name}`);
+}
+
+function changeInteriorRoom(roomId,events){
+  if(!state.world.interior)return;
+  const definition=LOCATION_DEFS[state.world.interior.locationId];
+  if(!definition?.rooms.some(room=>room.id===roomId))return;
+  state.world.interior.room=roomId;
+  state.dialogue.activeNpc=null;
+  state.dialogue.node=null;
+  events.push(domainEvent("INTERIOR_ROOM_ENTERED",{locationId:definition.id,room:roomId}));
+  const npc=currentWorldNpc();
+  if(npc)events.push(domainEvent("NPC_AVAILABLE",{id:npc.id,locationId:npc.locationId,room:roomId}));
+}
+
+function exitInterior(events){
+  if(!state.world.interior)return;
+  const locationId=state.world.interior.locationId;
+  state.world.interior=null;
+  state.dialogue.activeNpc=null;
+  state.dialogue.node=null;
+  events.push(domainEvent("LOCATION_EXITED",{locationId}));
+}
+
+function performInteriorAction(action,events){
+  if(action==="rest"){
+    state.character.resources.health.current=resourceMax("health");
+    state.character.resources.mana.current=resourceMax("mana");
+    state.character.resources.stamina.current=resourceMax("stamina");
+    state.character.statuses=[];
+    state.world.time=(state.world.time+8)%24;
+    events.push(domainEvent("PARTY_RESTED",{locationId:state.world.interior?.locationId||"camp"}));
+    toast("The party is fully restored");
+  }
+  if(action==="talk-serin")startNpcDialogue("serin",events);
+  if(action==="talk-spirit")startNpcDialogue("spirit",events);
+  if(action==="open-market")events.push(domainEvent("MARKET_OPENED",{locationId:state.world.interior?.locationId}));
+  if(action==="gather-rumors"){
+    state.dialogue.flags.rumors=(state.dialogue.flags.rumors||0)+1;
+    events.push(domainEvent("RUMOR_GATHERED",{amount:1}));
+    toast("A rumor about Cinderwatch is added to the journal");
+  }
+  if(action==="inspect-shrine"){
+    events.push(domainEvent("SHRINE_INSPECTED",{locationId:"moonfen"}));
+    toast("The sanctum opens deeper within the shrine");
+  }
+  if(action==="recover-relic"){
+    if(itemCount("moonfen-relic")){toast("The relic has already been recovered");return}
+    addItem(ITEM_LIBRARY.relic,1,events);
+    state.dialogue.flags.relicRecovered=true;
+    toast("Moonfen Relic recovered");
+  }
+  if(action==="elite-encounter"){
+    const existing=state.world.encounters.find(node=>node.id==="cinderwatch-elite");
+    if(existing?.resolved){toast("The courtyard is secure");return}
+    if(!existing)state.world.encounters.push({id:"cinderwatch-elite",x:state.world.player.x,y:state.world.player.y,terrain:"mountain",encounterId:"elite",resolved:false,discovered:true,locationId:"cinderwatch"});
+    startCombat("elite","cinderwatch-elite",events);
+  }
+  if(action==="recover-invitation"){
+    if(itemCount("ash-invitation")){toast("The invitation is already in inventory");return}
+    const elite=state.world.encounters.find(node=>node.id==="cinderwatch-elite");
+    if(!elite?.resolved){toast("The archive remains unsafe while the elite guards live");return}
+    addItem(ITEM_LIBRARY.invitation,1,events);
+    toast("Ash Court Invitation recovered");
+  }
+}
+
+/* ========================================================================== */
+/* SECTION 06 — NPCS, DIALOGUE, QUESTS                                         */
+/* ========================================================================== */
+
+function availableNpcs(){
+  if(state.world.interior){
+    return state.world.npcs.filter(npc=>npc.active&&npc.locationId===state.world.interior.locationId&&npc.room===state.world.interior.room);
+  }
+  return state.world.npcs.filter(npc=>npc.active&&npc.x===state.world.player.x&&npc.y===state.world.player.y);
+}
+
+function startNpcDialogue(npcId,events){
+  const npc=state.world.npcs.find(entry=>entry.id===npcId);
+  const definition=NPC_DEFS[npcId];
+  if(!npc||!definition||!availableNpcs().some(entry=>entry.id===npcId)){
+    toast("That NPC is not present here");
+    return;
+  }
+  npc.met=true;
+  state.dialogue.activeNpc=npcId;
+  state.dialogue.node=definition.dialogue;
+  if(!state.dialogue.visited.includes(definition.dialogue))state.dialogue.visited.push(definition.dialogue);
+  selectedNpcId=npcId;
+  events.push(domainEvent("NPC_CONVERSATION_STARTED",{id:npcId,locationId:npc.locationId,room:npc.room}));
+}
+
+function conditionsPass(conditions=[]){
+  return conditions.every(condition=>{
+    if(condition.type==="ITEM")return itemCount(condition.id)>=condition.amount;
+    if(condition.type==="GOLD")return state.wallet>=condition.amount;
+    if(condition.type==="FLAG")return state.dialogue.flags[condition.id]===condition.value;
+    if(condition.type==="FACTION")return(state.factions[condition.id]||0)>=condition.amount;
+    return true;
+  });
+}
+
+function applyDialogueEffect(effect,events){
+  if(effect.type==="FACTION"){
+    state.factions[effect.id]=clamp((state.factions[effect.id]||0)+effect.amount,-100,100);
+    events.push(domainEvent("FACTION_CHANGED",{id:effect.id,amount:effect.amount,value:state.factions[effect.id]}));
+  }
+  if(effect.type==="GOLD"){
+    state.wallet=Math.max(0,state.wallet+effect.amount);
+    events.push(domainEvent("GOLD_CHANGED",{amount:effect.amount,value:state.wallet}));
+  }
+  if(effect.type==="REMOVE_ITEM"){
+    removeItemByDefinition(effect.id,effect.amount);
+    events.push(domainEvent("ITEM_REMOVED",{definitionId:effect.id,amount:effect.amount}));
+  }
+  if(effect.type==="EVENT")events.push(domainEvent(effect.event,effect.payload||{}));
+}
+
+function chooseDialogue(index,events){
+  const node=DIALOGUE[state.dialogue.node];
+  const option=node?.choices[index];
+  if(!option||!conditionsPass(option.conditions))return;
+  for(const effect of option.effects||[])applyDialogueEffect(effect,events);
+  state.dialogue.node=option.to;
+  if(!state.dialogue.visited.includes(option.to))state.dialogue.visited.push(option.to);
+  events.push(domainEvent("DIALOGUE_CHOICE_MADE",{npcId:state.dialogue.activeNpc,from:Object.keys(DIALOGUE).find(key=>DIALOGUE[key]===node),to:option.to,index}));
+}
+
+function ensureQuests(){
+  for(const quest of QUEST_DEFS){
+    if(!state.quests[quest.id]){
+      state.quests[quest.id]={
+        status:"active",
+        pinned:quest.id==="moonfen",
+        progress:Object.fromEntries(quest.objectives.map(objective=>[objective.id,0])),
+        rewarded:false
+      };
+    }
+  }
+}
+
+function matchesWhere(payload,where={}){
+  return Object.entries(where).every(([key,value])=>payload?.[key]===value);
+}
+
+function processQuestEvent(event){
+  ensureQuests();
+  for(const quest of QUEST_DEFS){
+    const questState=state.quests[quest.id];
+    if(questState.status==="done")continue;
+    for(const objective of quest.objectives){
+      if(objective.event!==event.type||!matchesWhere(event.payload,objective.where))continue;
+      const increment=objective.useAmount?event.payload.amount||1:1;
+      questState.progress[objective.id]=Math.min(objective.target,(questState.progress[objective.id]||0)+increment);
+    }
+    const complete=quest.objectives.every(objective=>(questState.progress[objective.id]||0)>=objective.target);
+    if(complete&&!questState.rewarded){
+      questState.status="done";
+      questState.rewarded=true;
+      const rewardEvents=[];
+      for(const reward of quest.rewards){
+        if(reward.type==="XP")grantXP(reward.amount,rewardEvents);
+        if(reward.type==="GOLD"){
+          state.wallet+=reward.amount;
+          rewardEvents.push(domainEvent("GOLD_CHANGED",{amount:reward.amount,value:state.wallet}));
+        }
+        if(reward.type==="FACTION"){
+          state.factions[reward.id]=clamp((state.factions[reward.id]||0)+reward.amount,-100,100);
+          rewardEvents.push(domainEvent("FACTION_CHANGED",{id:reward.id,amount:reward.amount,value:state.factions[reward.id]}));
+        }
+      }
+      setTimeout(()=>{
+        rewardEvents.forEach(publish);
+        publish(domainEvent("QUEST_COMPLETED",{id:quest.id,title:quest.title}));
+        toast(`${quest.title} completed`);
+        renderAll();
+      },0);
+    }
+  }
+}
+
+/* ========================================================================== */
+/* SECTION 07 — COMBAT                                                        */
+/* ========================================================================== */
+
+function makePartyUnit(id){
+  if(id==="aven"){
+    const data=derived();
+    return{
+      id:"aven",
+      name:state.character.name,
+      team:"party",
+      hp:state.character.resources.health.current,
+      maxHp:resourceMax("health"),
+      mana:state.character.resources.mana.current,
+      maxMana:resourceMax("mana"),
+      power:data.stats.power,
+      magic:data.stats.magic,
+      defense:data.stats.defense,
+      speed:data.stats.speed,
+      color:"#f1c75b",
+      statuses:deepClone(state.character.statuses),
+      guard:0,
+      protecting:false,
+      abilities:data.abilities
+    };
+  }
+  if(id==="lyra")return{id:"lyra",name:"Lyra",team:"party",hp:72,maxHp:72,mana:80,maxMana:80,power:22,magic:48,defense:18,speed:17,color:"#b38dff",statuses:[],guard:0,protecting:false,abilities:["strike","guard","tonic","arcLance","mend"]};
+  return{id:"tor",name:"Tor",team:"party",hp:116,maxHp:116,mana:26,maxMana:26,power:30,magic:10,defense:42,speed:10,color:"#63dfa0",statuses:[],guard:0,protecting:false,abilities:["strike","guard","tonic","shieldBash","provoke"]};
+}
+
+function makeEnemy(type,index){
+  if(type==="hound")return{id:`hound-${index}`,name:"Ember Hound",team:"enemy",hp:118,maxHp:118,mana:0,maxMana:0,power:28,magic:4,defense:16,speed:15,color:"#c85048",statuses:[],guard:0,abilities:["cinderLunge","rendingBite"],intent:"cinderLunge"};
+  if(type==="seer")return{id:`seer-${index}`,name:"Ash Seer",team:"enemy",hp:86,maxHp:86,mana:60,maxMana:60,power:14,magic:35,defense:12,speed:12,color:"#755b9c",statuses:[],guard:0,abilities:["hexBolt","sandHex"],intent:"hexBolt"};
+  if(type==="mire")return{id:`mire-${index}`,name:"Mire Stalker",team:"enemy",hp:92,maxHp:92,mana:0,maxMana:0,power:22,magic:8,defense:20,speed:13,color:"#4e7b58",statuses:[],guard:0,abilities:["mireSpit","rendingBite"],intent:"mireSpit"};
+  if(type==="stone")return{id:`stone-${index}`,name:"Stonebound",team:"enemy",hp:155,maxHp:155,mana:0,maxMana:0,power:36,magic:4,defense:32,speed:7,color:"#647484",statuses:[],guard:0,abilities:["stoneCrash","guard"],intent:"stoneCrash"};
+  return{id:`dune-${index}`,name:"Dune Whisper",team:"enemy",hp:78,maxHp:78,mana:44,maxMana:44,power:13,magic:32,defense:11,speed:14,color:"#b88455",statuses:[],guard:0,abilities:["sandHex","hexBolt"],intent:"sandHex"};
+}
+
+function startCombat(encounterId,worldEncounterId,events){
+  const definition=ENCOUNTERS[encounterId]||ENCOUNTERS.grass;
+  state.combat={
+    active:true,
+    result:null,
+    encounter:definition.id,
+    worldEncounterId:worldEncounterId||null,
+    round:1,
+    index:0,
+    queue:[],
+    pending:null,
+    busy:false,
+    seed:hashString(`${state.world.seed}:${state.world.steps}:${encounterId}`),
+    units:[...state.party.members.map(makePartyUnit),...definition.enemies.map(makeEnemy)],
+    log:[`${definition.name} begins.`]
+  };
+  buildTurnQueue();
+  prepareEnemyIntents();
+  events.push(domainEvent("COMBAT_STARTED",{encounter:definition.id,worldEncounterId}));
+  setTimeout(()=>document.getElementById("combat")?.scrollIntoView({behavior:"smooth",block:"start"}),120);
+}
+
+function living(team){
+  return state.combat.units.filter(unit=>unit.team===team&&unit.hp>0);
+}
+
+function activeUnit(){
+  return state.combat.units.find(unit=>unit.id===state.combat.queue[state.combat.index]);
+}
+
+function effectiveSpeed(unit){
+  const bonus=unit.statuses.reduce((sum,status)=>sum+(STATUS_DEFS[status.id]?.effects||[]).filter(effect=>effect.type===EFFECT.ADD_STAT&&effect.stat==="speed").reduce((total,effect)=>total+effect.value,0),0);
+  return unit.speed+bonus;
+}
+
+function buildTurnQueue(){
+  state.combat.queue=state.combat.units.filter(unit=>unit.hp>0).sort((a,b)=>effectiveSpeed(b)-effectiveSpeed(a)).map(unit=>unit.id);
+  state.combat.index=0;
+}
+
+function formationPosition(id){
+  const slot=state.party.formation[id]??4;
+  return{x:slot%3,row:Math.floor(slot/3),slot};
+}
+
+function adjacentParty(a,b){
+  const first=formationPosition(a.id);
+  const second=formationPosition(b.id);
+  return Math.abs(first.x-second.x)+Math.abs(first.row-second.row)===1;
+}
+
+function formationSynergies(){
+  const aven=state.combat.units.find(unit=>unit.id==="aven");
+  const lyra=state.combat.units.find(unit=>unit.id==="lyra");
+  const tor=state.combat.units.find(unit=>unit.id==="tor");
+  return{
+    shieldline:!!(aven&&tor&&adjacentParty(aven,tor)),
+    arcConduit:!!(aven&&lyra&&formationPosition(lyra.id).row>formationPosition(aven.id).row&&Math.abs(formationPosition(lyra.id).x-formationPosition(aven.id).x)<=1),
+    frontGuard:Object.values(state.party.formation).filter(slot=>Math.floor(slot/3)===0).length>=2
+  };
+}
+
+function statusBonus(unit,stat){
+  return unit.statuses.reduce((sum,status)=>sum+(STATUS_DEFS[status.id]?.effects||[]).filter(effect=>effect.type===EFFECT.ADD_STAT&&effect.stat===stat).reduce((total,effect)=>total+effect.value,0),0);
+}
+
+function unitStat(unit,stat){
+  let value=(unit[stat]||0)+statusBonus(unit,stat);
+  if(unit.team==="party"){
+    const synergy=formationSynergies();
+    if(stat==="defense"&&synergy.shieldline&&(unit.id==="aven"||unit.id==="tor"))value+=5;
+    if(stat==="magic"&&synergy.arcConduit&&unit.id==="lyra")value+=7;
+    if(stat==="defense"&&synergy.frontGuard&&formationPosition(unit.id).row===0)value+=4;
+  }
+  return value;
+}
+
+function prepareEnemyIntents(){
+  const random=mulberry32(state.combat.seed+state.combat.round*37);
+  living("enemy").forEach(enemy=>{
+    const valid=enemy.abilities.filter(id=>{
+      const ability=ABILITIES[id];
+      return !ability.resource||ability.resource!=="mana"||enemy.mana>=ability.cost;
+    });
+    enemy.intent=choice(valid,random);
+  });
+}
+
+function abilityTargetIds(actor,ability){
+  const allies=state.combat.units.filter(unit=>unit.team===actor.team);
+  const opponents=state.combat.units.filter(unit=>unit.team!==actor.team);
+  if(ability.target==="self")return[actor.id];
+  if(ability.target==="ally")return allies.filter(unit=>unit.hp>0).map(unit=>unit.id);
+  if(ability.target==="enemy")return opponents.filter(unit=>unit.hp>0).map(unit=>unit.id);
+  if(ability.target==="all-enemies")return opponents.filter(unit=>unit.hp>0).map(unit=>unit.id);
+  if(ability.target==="all-allies")return allies.filter(unit=>unit.hp>0).map(unit=>unit.id);
+  return[];
+}
+
+function canUseAbility(actor,ability){
+  if(!ability)return false;
+  if(ability.resource==="mana"&&actor.mana<ability.cost)return false;
+  if(ability.resource==="item"&&itemCount("health-tonic")<ability.cost)return false;
+  if(ability.validate&&!ability.validate(actor))return false;
+  return abilityTargetIds(actor,ability).length>0;
+}
+
+function chooseCombatAbility(id,events){
+  const actor=activeUnit();
+  const ability=ABILITIES[id];
+  if(!actor||actor.team!=="party"||state.combat.busy||!actor.abilities.includes(id)||!canUseAbility(actor,ability))return;
+  const targets=abilityTargetIds(actor,ability);
+  if(["self","all-enemies","all-allies"].includes(ability.target)){
+    resolveAbility(actor,ability,targets[0],events);
+    return;
+  }
+  state.combat.pending={abilityId:id,actorId:actor.id,validTargets:targets};
+  events.push(domainEvent("COMBAT_TARGETING_STARTED",{actor:actor.id,ability:id,targets}));
+}
+
+function resolveCombatTarget(targetId,events){
+  const pending=state.combat.pending;
+  const actor=activeUnit();
+  if(!pending||!actor||pending.actorId!==actor.id||!pending.validTargets.includes(targetId))return;
+  resolveAbility(actor,ABILITIES[pending.abilityId],targetId,events);
+}
+
+function combatContext(actor,events,random){
+  return{
+    random,
+    event:(type,payload)=>events.push(domainEvent(type,payload)),
+    log:message=>{
+      state.combat.log.push(message);
+      if(state.combat.log.length>14)state.combat.log.shift();
+    },
+    allies:()=>living(actor.team),
+    enemies:()=>living(actor.team==="party"?"enemy":"party"),
+    damage:(target,raw,type)=>applyCombatDamage(actor,target,raw,type,events),
+    heal:(target,amount)=>applyCombatHeal(actor,target,amount,events),
+    status:(target,id,duration)=>applyCombatStatus(target,id,duration,events)
+  };
+}
+
+function resolveAbility(actor,ability,targetId,events){
+  if(!canUseAbility(actor,ability))return;
+  state.combat.pending=null;
+  state.combat.busy=true;
+  if(ability.resource==="mana")actor.mana-=ability.cost;
+  const target=state.combat.units.find(unit=>unit.id===targetId)||actor;
+  const random=mulberry32(state.combat.seed+state.combat.round*101+state.combat.index*17+hashString(ability.id));
+  const context=combatContext(actor,events,random);
+  events.push(domainEvent("ABILITY_USED",{actor:actor.id,ability:ability.id,target:target.id}));
+  animateCombatant(actor.id,"attack");
+  ability.resolve(actor,target,context);
+  syncCharacterFromCombat();
+  setTimeout(()=>advanceCombatTurn(),620);
+}
+
+function applyCombatDamage(actor,target,raw,type,events){
+  const defense=unitStat(target,"defense");
+  const position=target.team==="party"?formationPosition(target.id):null;
+  const rowReduction=position?position.row*5:0;
+  const guard=target.guard||0;
+  let damage=Math.max(1,Math.round(raw-defense*.055-rowReduction-guard));
+  target.guard=0;
+  if(actor.team==="party"&&target.team==="enemy"&&derived().triggers.execute&&target.hp/target.maxHp<.3)damage=Math.round(damage*(1+derived().triggers.execute));
+  const protector=findProtector(target);
+  if(protector&&protector.id!==target.id&&protector.hp>0){
+    const intercepted=Math.round(damage*.35);
+    protector.hp=Math.max(0,protector.hp-intercepted);
+    damage-=intercepted;
+    events.push(domainEvent("DAMAGE_INTERCEPTED",{protector:protector.id,target:target.id,amount:intercepted}));
+    floatNumber(protector.id,`-${intercepted}`,"#ffb5bd");
+  }
+  target.hp=Math.max(0,target.hp-damage);
+  state.combat.log.push(`${actor.name} deals ${damage} ${type} damage to ${target.name}.`);
+  events.push(domainEvent("DAMAGE_DEALT",{source:actor.id,target:target.id,amount:damage,type}));
+  animateCombatant(target.id,"hit");
+  floatNumber(target.id,`-${damage}`,"#ff7d88");
+  if(target.hp<=0)events.push(domainEvent("UNIT_DEFEATED",{id:target.id,team:target.team}));
+  return damage;
+}
+
+function findProtector(target){
+  if(target.team!=="party")return null;
+  const tor=state.combat.units.find(unit=>unit.id==="tor"&&unit.hp>0&&unit.protecting);
+  if(!tor)return null;
+  return adjacentParty(tor,target)?tor:null;
+}
+
+function applyCombatHeal(actor,target,amount,events){
+  const healed=Math.max(0,Math.min(target.maxHp-target.hp,Math.round(amount)));
+  target.hp+=healed;
+  state.combat.log.push(`${actor.name} restores ${healed} health to ${target.name}.`);
+  events.push(domainEvent("HEAL_APPLIED",{source:actor.id,target:target.id,amount:healed}));
+  floatNumber(target.id,`+${healed}`,"#72f0ad");
+}
+
+function applyCombatStatus(target,id,duration,events){
+  const existing=target.statuses.find(status=>status.id===id);
+  if(existing)existing.remaining=Math.max(existing.remaining,duration);
+  else target.statuses.push({id,remaining:duration});
+  events.push(domainEvent("STATUS_APPLIED",{target:target.id,id,duration}));
+}
+
+function processTurnStatuses(unit,events){
+  for(const status of [...unit.statuses]){
+    const definition=STATUS_DEFS[status.id];
+    if(definition?.tick&&unit.hp>0){
+      if(definition.tick.type==="damage"){
+        unit.hp=Math.max(0,unit.hp-definition.tick.amount);
+        events.push(domainEvent("STATUS_TICK",{target:unit.id,id:status.id,amount:definition.tick.amount}));
+        state.combat.log.push(`${unit.name} suffers ${definition.tick.amount} from ${definition.name}.`);
+        floatNumber(unit.id,`-${definition.tick.amount}`,"#a7d765");
+      }
+    }
+    status.remaining-=1;
+  }
+  unit.statuses=unit.statuses.filter(status=>status.remaining>0);
+}
+
+function advanceCombatTurn(){
+  const events=[];
+  const completed=activeUnit();
+  if(completed)processTurnStatuses(completed,events);
+  if(checkCombatEnd(events)){
+    events.forEach(publish);
+    renderAll();
+    return;
+  }
+  state.combat.index+=1;
+  if(state.combat.index>=state.combat.queue.length){
+    state.combat.round+=1;
+    state.combat.units.forEach(unit=>{unit.guard=0;unit.protecting=false});
+    buildTurnQueue();
+    prepareEnemyIntents();
+    events.push(domainEvent("COMBAT_ROUND_STARTED",{round:state.combat.round}));
+  }
+  while(activeUnit()&&activeUnit().hp<=0){
+    state.combat.index+=1;
+    if(state.combat.index>=state.combat.queue.length){
+      state.combat.round+=1;
+      buildTurnQueue();
+      prepareEnemyIntents();
+      break;
+    }
+  }
+  state.combat.busy=false;
+  events.forEach(publish);
+  syncCharacterFromCombat();
+  renderAll();
+  if(activeUnit()?.team==="enemy")queueEnemyTurn();
+}
+
+function checkCombatEnd(events){
+  if(living("enemy").length===0){finishCombat("victory",events);return true}
+  if(living("party").length===0){finishCombat("defeat",events);return true}
+  return false;
+}
+
+function finishCombat(result,events){
+  state.combat.result=result;
+  state.combat.busy=true;
+  state.combat.pending=null;
+  syncCharacterFromCombat();
+  if(result==="victory"){
+    const definition=ENCOUNTERS[state.combat.encounter]||ENCOUNTERS.grass;
+    grantXP(definition.xp,events);
+    state.wallet+=definition.gold;
+    state.director.recentVictories+=1;
+    if(state.combat.worldEncounterId){
+      const node=state.world.encounters.find(entry=>entry.id===state.combat.worldEncounterId);
+      if(node)node.resolved=true;
+    }
+    events.push(domainEvent("GOLD_CHANGED",{amount:definition.gold,value:state.wallet}));
+    events.push(domainEvent("COMBAT_VICTORY",{encounter:state.combat.encounter,worldEncounterId:state.combat.worldEncounterId,round:state.combat.round}));
+    generateLoot(events);
+    state.combat.log.push(`Victory. ${definition.xp} XP and ${definition.gold} gold earned.`);
+    toast("Victory resolves the world encounter");
+  }else{
+    events.push(domainEvent("COMBAT_DEFEAT",{encounter:state.combat.encounter}));
+    state.combat.log.push("The party has fallen.");
+  }
+}
+
+function syncCharacterFromCombat(){
+  const aven=state.combat.units.find(unit=>unit.id==="aven");
+  if(!aven)return;
+  state.character.resources.health.current=clamp(aven.hp,0,resourceMax("health"));
+  state.character.resources.mana.current=clamp(aven.mana,0,resourceMax("mana"));
+  state.character.statuses=deepClone(aven.statuses);
+}
+
+function queueEnemyTurn(){
+  const actor=activeUnit();
+  if(!actor||actor.team!=="enemy"||state.combat.busy||state.combat.result)return;
+  state.combat.busy=true;
+  setTimeout(()=>{
+    const events=[];
+    const stunned=actor.statuses.find(status=>status.id==="stunned");
+    if(stunned){
+      state.combat.log.push(`${actor.name} is stunned and loses the turn.`);
+      events.push(domainEvent("TURN_SKIPPED",{actor:actor.id,reason:"stunned"}));
+      state.combat.busy=false;
+      events.forEach(publish);
+      advanceCombatTurn();
+      return;
+    }
+    const ability=ABILITIES[actor.intent]||ABILITIES[actor.abilities[0]];
+    const random=mulberry32(state.combat.seed+state.combat.round*211+state.combat.index*31);
+    const targets=abilityTargetIds(actor,ability).map(id=>state.combat.units.find(unit=>unit.id===id)).filter(Boolean);
+    const target=ability.target==="enemy"?[...targets].sort((a,b)=>a.hp/a.maxHp-b.hp/b.maxHp)[random()>.5?0:Math.floor(random()*targets.length)]:actor;
+    if(ability.resource==="mana")actor.mana=Math.max(0,actor.mana-ability.cost);
+    events.push(domainEvent("ABILITY_USED",{actor:actor.id,ability:ability.id,target:target.id}));
+    animateCombatant(actor.id,"attack");
+    ability.resolve(actor,target,combatContext(actor,events,random));
+    actor.intent=choice(actor.abilities.filter(id=>{
+      const candidate=ABILITIES[id];
+      return !candidate.resource||candidate.resource!=="mana"||actor.mana>=candidate.cost;
+    }),random);
+    events.forEach(publish);
+    setTimeout(()=>advanceCombatTurn(),650);
+  },650);
+}
+
+function animateCombatant(id,className){
+  const element=$(`[data-unit-id="${id}"]`);
+  if(!element)return;
+  element.classList.remove(className);
+  void element.offsetWidth;
+  element.classList.add(className);
+  setTimeout(()=>element.classList.remove(className),650);
+}
+
+function floatNumber(id,text,color){
+  const target=$(`[data-unit-id="${id}"]`);
+  const field=$("#battlefield");
+  if(!target||!field)return;
+  const targetRect=target.getBoundingClientRect();
+  const fieldRect=field.getBoundingClientRect();
+  const element=document.createElement("span");
+  element.className="floating-number";
+  element.textContent=text;
+  element.style.setProperty("--float",color);
+  element.style.left=`${targetRect.left-fieldRect.left+targetRect.width/2}px`;
+  element.style.top=`${targetRect.top-fieldRect.top+30}px`;
+  field.appendChild(element);
+  setTimeout(()=>element.remove(),950);
+}
+
+/* ========================================================================== */
+/* SECTION 08 — LOOT, MARKET, DIRECTOR                                         */
+/* ========================================================================== */
+
+const LOOT_BASES=[
+  {type:"sword",noun:"Blade",base:95,stats:["power","speed"]},
+  {type:"staff",noun:"Staff",base:105,stats:["magic","defense"]},
+  {type:"bow",noun:"Bow",base:90,stats:["power","speed"]},
+  {type:"shield",noun:"Shield",base:88,stats:["defense"]},
+  {type:"ring",noun:"Ring",base:120,stats:["magic","defense"]}
+];
+const LOOT_PREFIX=["Ashen","Moonlit","Runebound","Hollow","Starforged","Gilded","Stormwake","Cinderborn"];
+const LOOT_SUFFIX=["of the Verge","of Embers","of Returning","of Deep Hours","of the Warden","of Glass","of Quiet Thunder"];
+
+function generateLoot(events=[]){
+  const seed=state.loot.counter++;
+  const random=mulberry32(hashString(`${state.world.seed}:${seed}`));
+  const base=choice(LOOT_BASES,random);
+  const roll=random()*100;
+  const rarity=roll<42?"common":roll<71?"uncommon":roll<89?"rare":roll<97?"epic":"legendary";
+  const multiplier={common:1,uncommon:1.3,rare:1.7,epic:2.3,legendary:3.2}[rarity];
+  const count={common:1,uncommon:2,rare:3,epic:4,legendary:5}[rarity];
+  const pool=[...new Set([...base.stats,"health","magic","defense","speed"])];
+  const affixes=[];
+  while(affixes.length<count&&pool.length){
+    const index=Math.floor(random()*pool.length);
+    const stat=pool.splice(index,1)[0];
+    const value=Math.max(1,Math.round((4+random()*8)*multiplier));
+    affixes.push({stat,value});
+  }
+  state.loot.current={
+    definitionId:`generated-${seed}`,
+    instanceId:uid("loot"),
+    type:base.type,
+    name:`${choice(LOOT_PREFIX,random)} ${base.noun} ${choice(LOOT_SUFFIX,random)}`,
+    rarity,
+    value:Math.round(base.base*multiplier*(.8+random()*.4)),
+    seed,
+    affixes,
+    effects:affixes.map(affix=>affix.stat==="health"?{type:EFFECT.ADD_MAX,resource:"health",value:affix.value}:{type:EFFECT.ADD_STAT,stat:affix.stat,value:affix.value}),
+    qty:1
+  };
+  events.push(domainEvent("LOOT_GENERATED",{seed,rarity}));
+}
+
+function takeLoot(events){
+  if(!state.loot.current)return;
+  if(addItem(state.loot.current,1,events)){
+    toast(`${state.loot.current.name} added`);
+    state.loot.current=null;
+  }
+}
+
+function marketPrice(item){
+  const scarcity=1+(6-item.stock)*.055;
+  const discount=1-clamp(state.factions.valley,0,100)*.0015;
+  const dayWave=1+Math.sin((state.market.day+item.base)*.73)*.07;
+  return Math.max(1,Math.round(item.base*item.demand*scarcity*discount*dayWave));
+}
+
+function buyMarketItem(definitionId,events){
+  const stock=state.market.stock.find(item=>item.definitionId===definitionId);
+  if(!stock)return;
+  const price=marketPrice(stock);
+  if(stock.stock<=0||state.wallet<price)return;
+  const definition=Object.values(ITEM_LIBRARY).find(item=>item.definitionId===definitionId);
+  if(!definition)return;
+  if(!addItem(definition,1,events))return;
+  state.wallet-=price;
+  stock.stock-=1;
+  events.push(domainEvent("MARKET_ITEM_BOUGHT",{definitionId,price}));
+  events.push(domainEvent("GOLD_CHANGED",{amount:-price,value:state.wallet}));
+}
+
+function advanceMarket(events){
+  state.market.day+=1;
+  const random=mulberry32(hashString(`${state.world.seed}:market:${state.market.day}`));
+  state.market.stock.forEach(item=>{
+    item.stock=clamp(item.stock+(random()>.45?1:-1),0,14);
+    item.demand=clamp(item.demand+(random()-.5)*.18,.7,1.55);
+  });
+  state.market.history.push(marketPrice(state.market.stock[0]));
+  if(state.market.history.length>16)state.market.history.shift();
+  events.push(domainEvent("MARKET_DAY_ADVANCED",{day:state.market.day}));
+}
+
+function encounterPressure(){
+  const health=state.character.resources.health.current/resourceMax("health");
+  const stamina=state.character.resources.stamina.current/resourceMax("stamina");
+  const unresolved=state.world.encounters.filter(node=>!node.resolved).length;
+  return clamp(state.director.aggression*.42+state.director.alert*.3+(1-health)*24+(1-stamina)*12+state.director.recentVictories*4+Math.min(12,unresolved*.3),0,100);
+}
+
+/* ========================================================================== */
+/* SECTION 09 — COMMAND REDUCER                                                */
+/* ========================================================================== */
+
+function reduceCommand(type,payload,events){
+  switch(type){
+    case"SET_SKIN":
+      state.character.skin=payload.color;
+      events.push(domainEvent("CHARACTER_APPEARANCE_CHANGED",{slot:"skin",color:payload.color}));
+      break;
+    case"SET_HAIR":
+      state.character.hair=payload.color;
+      events.push(domainEvent("CHARACTER_APPEARANCE_CHANGED",{slot:"hair",color:payload.color}));
+      break;
+    case"CYCLE_EQUIPMENT":{
+      const slot=payload.slot;
+      const types=Object.entries(ITEM_SLOT).filter(([,value])=>value===slot).map(([key])=>key);
+      const candidates=state.inventory.items.filter(item=>types.includes(item.type));
+      if(!candidates.length)break;
+      const current=state.character.equipment[slot];
+      const index=candidates.findIndex(item=>item.instanceId===current);
+      const next=candidates[(index+1)%candidates.length];
+      equipItem(next.instanceId,events);
+      break;
+    }
+    case"EQUIP_ITEM":equipItem(payload.instanceId,events);break;
+    case"USE_ITEM":useItem(payload.instanceId,events);break;
+    case"DISCARD_ITEM":{
+      const item=state.inventory.items.find(entry=>entry.instanceId===payload.instanceId);
+      if(!item||item.questItem)return;
+      removeItemByDefinition(item.definitionId,1);
+      events.push(domainEvent("ITEM_DISCARDED",{definitionId:item.definitionId}));
+      break;
+    }
+    case"UNLOCK_TALENT":unlockTalent(payload.id,events);break;
+    case"RESET_TALENTS":state.talents={points:6,unlocked:["core"]};events.push(domainEvent("TALENTS_RESET"));break;
+    case"CHANGE_RESOURCE":{
+      const resource=state.character.resources[payload.key];
+      if(resource){resource.current=clamp(resource.current+payload.amount,0,resourceMax(payload.key));events.push(domainEvent("RESOURCE_CHANGED",{key:payload.key,amount:payload.amount,value:resource.current}))}
+      break;
+    }
+    case"GAIN_XP":grantXP(payload.amount,events);break;
+    case"ADD_STATUS":addStatus("aven",payload.id,payload.duration||STATUS_DEFS[payload.id]?.duration||2,events);break;
+    case"REST":performInteriorAction("rest",events);break;
+    case"GATHER":gatherCurrentTerrain(events);break;
+    case"GENERATE_WORLD":generateWorld(payload.seed||state.world.seed,events);break;
+    case"MOVE_WORLD":moveWorld(payload.dx,payload.dy,events);break;
+    case"ENTER_LOCATION":enterCurrentLocation(events);break;
+    case"EXIT_LOCATION":exitInterior(events);break;
+    case"CHANGE_ROOM":changeInteriorRoom(payload.room,events);break;
+    case"INTERIOR_ACTION":performInteriorAction(payload.action,events);break;
+    case"START_DIALOGUE":startNpcDialogue(payload.npcId,events);break;
+    case"DIALOGUE_CHOICE":chooseDialogue(payload.index,events);break;
+    case"PIN_QUEST":Object.values(state.quests).forEach(quest=>quest.pinned=false);if(state.quests[payload.id])state.quests[payload.id].pinned=true;events.push(domainEvent("QUEST_PINNED",{id:payload.id}));break;
+    case"START_COMBAT":startCombat(payload.encounterId||"grass",payload.worldEncounterId||null,events);break;
+    case"CHOOSE_ABILITY":chooseCombatAbility(payload.id,events);break;
+    case"SELECT_TARGET":resolveCombatTarget(payload.id,events);break;
+    case"CANCEL_TARGET":state.combat.pending=null;events.push(domainEvent("COMBAT_TARGETING_CANCELLED"));break;
+    case"MOVE_FORMATION":moveFormation(payload.member,payload.slot,events);break;
+    case"GENERATE_LOOT":generateLoot(events);break;
+    case"TAKE_LOOT":takeLoot(events);break;
+    case"BUY_ITEM":buyMarketItem(payload.definitionId,events);break;
+    case"ADVANCE_MARKET":advanceMarket(events);break;
+    case"SET_DIRECTOR":state.director[payload.key]=payload.value;events.push(domainEvent("DIRECTOR_CHANGED",payload));break;
+    case"LOAD_STATE":state=validateAndMigrate(payload.state);events.push(domainEvent("STATE_LOADED"));break;
+    case"RESET_STUDIO":
+      state=deepClone(INITIAL_STATE);
+      selectedItemId=state.inventory.items[0].instanceId;
+      selectedTalentId="core";
+      selectedQuestId="moonfen";
+      selectedNpcId=null;
+      ensureQuests();
+      generateWorld(state.world.seed,events);
+      generateLoot(events);
+      break;
+  }
+}
+
+function moveFormation(member,slot,events){
+  if(state.combat.active&&!state.combat.result&&state.combat.round>1){toast("Formation locks after round one");return}
+  const occupied=Object.keys(state.party.formation).find(id=>state.party.formation[id]===slot);
+  const old=state.party.formation[member];
+  state.party.formation[member]=slot;
+  if(occupied)state.party.formation[occupied]=old;
+  state.party.selectedFormation=null;
+  events.push(domainEvent("FORMATION_CHANGED",{member,slot,swapped:occupied||null}));
+}
+
+/* ========================================================================== */
+/* SECTION 10 — SVG AND ICON HELPERS                                           */
+/* ========================================================================== */
+
+function itemIcon(type,color){
+  const common=`fill="none" stroke="${color}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"`;
+  if(["sword","staff","bow"].includes(type))return`<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M42 8 21 42l-4 13 12-6L50 14Z" ${common}/><path d="m16 40 10 10M12 52l7-7" ${common}/></svg>`;
+  if(type==="shield")return`<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M32 6 52 14v17c0 13-8 23-20 28C20 54 12 44 12 31V14Z" ${common}/><path d="M32 16v31" ${common}/></svg>`;
+  if(type==="armor"||type==="helm")return`<svg viewBox="0 0 64 64" aria-hidden="true"><path d="m18 14 14-7 14 7 8 15-9 6-4-11v33H23V24l-4 11-9-6Z" ${common}/></svg>`;
+  if(type==="potion")return`<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M24 8h16M27 8v12L16 35v16c0 5 4 8 9 8h14c5 0 9-3 9-8V35L37 20V8" ${common}/><path d="M20 39h24" ${common}/></svg>`;
+  if(type==="ring")return`<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="38" r="17" ${common}/><path d="m24 18 8-10 8 10-8 8Z" ${common}/></svg>`;
+  if(type==="relic"||type==="gem")return`<svg viewBox="0 0 64 64" aria-hidden="true"><path d="m32 5 20 17-8 31H20l-8-31Z" ${common}/><path d="m12 22 20 31 20-31M32 5v48" ${common}/></svg>`;
+  if(type==="book")return`<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M10 11h20c7 0 10 4 10 9v35c-3-4-7-6-12-6H10ZM54 11H34c-2 0-3 1-4 2" ${common}/></svg>`;
+  return`<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M13 18h38v33H13Z" ${common}/><path d="M20 18v-6h24v6" ${common}/></svg>`;
+}
+
+function unitVector(unit){
+  if(unit.team==="enemy"){
+    return`<svg viewBox="0 0 90 100" aria-hidden="true"><ellipse cx="45" cy="92" rx="31" ry="6" fill="#000" opacity=".35"/><path d="M18 75Q18 35 45 24Q72 35 72 75L61 90H29Z" fill="${unit.color}" opacity=".88"/><path d="M22 43 8 24M68 43 82 24" stroke="${unit.color}" stroke-width="8" stroke-linecap="round"/><circle cx="34" cy="48" r="5" fill="#ffdf8e"/><circle cx="56" cy="48" r="5" fill="#ffdf8e"/><path d="M30 66Q45 77 60 66" fill="none" stroke="#21090b" stroke-width="5"/></svg>`;
+  }
+  const weapon=unit.id==="lyra"?"staff":unit.id==="tor"?"shield":"sword";
+  return`<svg viewBox="0 0 90 100" aria-hidden="true"><ellipse cx="45" cy="93" rx="30" ry="6" fill="#000" opacity=".32"/><circle cx="45" cy="26" r="15" fill="#d6a47d"/><path d="M30 22Q34 6 45 7Q59 9 61 25L53 18Q43 23 31 18Z" fill="#35231d"/><path d="M26 45Q45 33 64 45L68 84Q45 94 22 84Z" fill="${unit.color}"/><path d="M27 48 15 77M63 48 75 77" stroke="#d6a47d" stroke-width="9" stroke-linecap="round"/>${weapon==="sword"?`<path d="m72 56 8-3-5 34-5 8-2-10Z" fill="#d9e4ea"/><path d="M64 81h17" stroke="#f1c75b" stroke-width="4"/>`:weapon==="staff"?`<path d="M73 47 66 96" stroke="#7b4b2e" stroke-width="5"/><circle cx="74" cy="40" r="9" fill="#b38dff"/>`:`<path d="M8 56Q20 45 32 56L29 85Q20 95 11 85Z" fill="#31506d" stroke="#f1c75b" stroke-width="3"/>`}</svg>`;
+}
+
+/* ========================================================================== */
+/* SECTION 11 — RENDER: CHARACTER                                              */
+/* ========================================================================== */
+
+const skinTones=["#f0c6a5","#d6a47d","#b87b58","#8d573e","#5f372a"];
+const hairColors=["#211915","#3b251d","#75462c","#b47b42","#c8c2b7","#4d315e"];
+
+function renderCharacter(){
+  const svg=$("#paperdoll");
+  svg.style.setProperty("--skin",state.character.skin);
+  svg.style.setProperty("--hair",state.character.hair);
+  const offhand=state.character.equipment.offhand;
+  $("#pd-shield").style.opacity=offhand?"1":"0";
+  $("#pd-helm").style.opacity=state.character.equipment.helmet?"1":"0";
+  $("#character-name").textContent=state.character.name;
+  $("#character-class").textContent=`${state.character.className} · ${state.character.race}`;
+  $("#character-level").textContent=state.character.level;
+  const data=derived();
+  $("#character-stats").innerHTML=Object.entries(data.stats).map(([key,value])=>`<div class="stat"><strong>${value}</strong><small>${key}</small></div>`).join("");
+  $("#skin-swatches").innerHTML=skinTones.map(color=>`<button class="swatch" style="--swatch:${color}" data-skin="${color}" aria-label="Set skin ${color}" aria-pressed="${state.character.skin===color}"></button>`).join("");
+  $("#hair-swatches").innerHTML=hairColors.map(color=>`<button class="swatch" style="--swatch:${color}" data-hair="${color}" aria-label="Set hair ${color}" aria-pressed="${state.character.hair===color}"></button>`).join("");
+  const glyphs={armor:"◇",weapon:"⚔",helmet:"⌂",offhand:"⬡",ring:"○",cloak:"⌁"};
+  $("#equipment-list").innerHTML=Object.entries(state.character.equipment).map(([slot,instanceId])=>{
+    const item=state.inventory.items.find(entry=>entry.instanceId===instanceId);
+    return`<button class="equipment-slot" data-cycle-slot="${slot}"><i>${glyphs[slot]||"◇"}</i><span><b>${item?.name||`Empty ${slot}`}</b><small>${slot} · tap to cycle owned items</small></span></button>`;
+  }).join("");
+}
+
+function renderResources(){
+  const definitions=[
+    {key:"health",label:"HP",color:"#f06773",dark:"#9f2d38"},
+    {key:"mana",label:"MP",color:"#568eff",dark:"#274da5"},
+    {key:"stamina",label:"SP",color:"#63dfa0",dark:"#2f8d58"},
+    {key:"xp",label:"XP",color:"#d69cff",dark:"#7146a5"}
+  ];
+  $("#resource-stack").innerHTML=definitions.map(definition=>{
+    const current=definition.key==="xp"?state.character.xp:state.character.resources[definition.key].current;
+    const maximum=definition.key==="xp"?100:resourceMax(definition.key);
+    const percent=clamp(current/maximum*100,0,100);
+    return`<div class="resource-meter" style="--value:${percent}%;--color:${definition.color};--dark:${definition.dark}"><span class="fill"></span><span class="label"><b>${definition.label}</b><b>${Math.round(current)} / ${Math.round(maximum)}</b></span></div>`;
+  }).join("");
+  $("#status-row").innerHTML=state.character.statuses.length?state.character.statuses.map(status=>`<div class="status" title="${STATUS_DEFS[status.id]?.name||status.id}">${STATUS_DEFS[status.id]?.icon||"?"}<small>${status.remaining}</small></div>`).join(""):`<span class="chip">No active effects</span>`;
+}
+
+function renderInventory(){
+  const capacity=state.inventory.capacity;
+  $("#inventory-capacity").textContent=`${state.inventory.items.length} / ${capacity}`;
+  const slots=[...state.inventory.items,...Array(Math.max(0,capacity-state.inventory.items.length)).fill(null)];
+  $("#inventory-grid").innerHTML=slots.map((item,index)=>{
+    if(!item)return`<button class="item-slot empty" aria-label="Empty slot ${index+1}"></button>`;
+    const color=RARITY[item.rarity]||RARITY.common;
+    return`<button class="item-slot ${selectedItemId===item.instanceId?"selected":""}" data-item="${item.instanceId}" style="border-color:${selectedItemId===item.instanceId?color:""}" aria-label="${escapeHTML(item.name)}">${itemIcon(item.type,color)}${item.qty>1?`<span class="qty">${item.qty}</span>`:""}</button>`;
+  }).join("");
+  const item=state.inventory.items.find(entry=>entry.instanceId===selectedItemId)||state.inventory.items[0];
+  if(!item){$("#item-detail").innerHTML="Inventory empty";return}
+  selectedItemId=item.instanceId;
+  const effects=(item.effects||[]).map(effect=>{
+    if(effect.type===EFFECT.ADD_STAT)return`+${effect.value} ${effect.stat}`;
+    if(effect.type===EFFECT.ADD_MAX)return`+${effect.value} max ${effect.resource}`;
+    if(effect.type===EFFECT.HEAL)return`Restore ${effect.amount} HP`;
+    return effect.type;
+  });
+  const equippable=Boolean(ITEM_SLOT[item.type]);
+  $("#item-detail").innerHTML=`<h4>${escapeHTML(item.name)}</h4><p>${item.rarity} · ${item.type} · ${item.value} gold</p><div class="effect-list">${effects.length?effects.map(text=>`<div class="effect-line"><span>Effect</span><strong>${text}</strong></div>`).join(""):`<div class="effect-line"><span>Utility</span><strong>—</strong></div>`}</div><div class="toolbar"><button class="mini" data-item-action="${equippable?"equip":"use"}" data-instance="${item.instanceId}">${equippable?"Equip":"Use"}</button><button class="mini" data-item-action="discard" data-instance="${item.instanceId}" ${item.questItem?"disabled":""}>Discard</button></div>`;
+}
+
+function renderTalents(){
+  const links=TALENTS.flatMap(talent=>talent.requires.map(parentId=>{
+    const parent=TALENTS.find(item=>item.id===parentId);
+    const active=state.talents.unlocked.includes(parentId)&&state.talents.unlocked.includes(talent.id);
+    const x1=parent.x*6;
+    const y1=parent.y*4.4;
+    const x2=talent.x*6;
+    const y2=talent.y*4.4;
+    return`<path d="M${x1} ${y1}C${x1} ${(y1+y2)/2} ${x2} ${(y1+y2)/2} ${x2} ${y2}" fill="none" stroke="${active?"#65dcec":"#2a4053"}" stroke-width="3"/>`;
+  })).join("");
+  $("#talent-svg").innerHTML=links;
+  $("#talent-nodes").innerHTML=TALENTS.map(talent=>{
+    const unlocked=state.talents.unlocked.includes(talent.id);
+    const available=!unlocked&&talent.requires.every(id=>state.talents.unlocked.includes(id))&&state.talents.points>=talent.cost;
+    return`<button class="talent-node ${unlocked?"unlocked":available?"available":""}" data-talent="${talent.id}" style="--x:${talent.x}%;--y:${talent.y}%"><b>${talent.icon}</b><small>${talent.name}</small></button>`;
+  }).join("");
+  $("#talent-points").textContent=state.talents.points;
+  const talent=TALENTS.find(item=>item.id===selectedTalentId)||TALENTS[0];
+  $("#talent-detail").innerHTML=`<strong>${talent.name}</strong><p class="section-note">${talent.description}</p><div class="effect-list">${talent.effects.map(effect=>`<div class="effect-line"><span>${effect.type}</span><strong>${effect.stat||effect.resource||effect.trigger||effect.ability} ${effect.value??""}</strong></div>`).join("")}</div>`;
+}
+
+/* ========================================================================== */
+/* SECTION 12 — RENDER: WORLD CANVASES                                         */
+/* ========================================================================== */
+
+function resizeMapCanvas(){
+  const canvas=$("#world-map-canvas");
+  const rect=$("#map-wrap").getBoundingClientRect();
+  const dpr=Math.min(window.devicePixelRatio||1,1.5);
+  if(!rect.width||!rect.height)return;
+  canvas.width=Math.round(rect.width*dpr);
+  canvas.height=Math.round(rect.height*dpr);
+  worldRuntime.mapCanvas=canvas;
+  worldRuntime.mapCtx=canvas.getContext("2d",{alpha:false});
+  worldRuntime.mapWidth=rect.width;
+  worldRuntime.mapHeight=rect.height;
+  worldRuntime.mapDpr=dpr;
+  worldRuntime.tileSize=clamp(Math.floor(Math.min(rect.width/13,rect.height/15)),24,38);
+  centerMap(true);
+  drawMap();
+}
+
+function resizeViewCanvas(){
+  const canvas=$("#first-person-canvas");
+  const rect=$("#first-person-wrap").getBoundingClientRect();
+  const dpr=Math.min(window.devicePixelRatio||1,1.5);
+  if(!rect.width||!rect.height)return;
+  canvas.width=Math.round(rect.width*dpr);
+  canvas.height=Math.round(rect.height*dpr);
+  worldRuntime.viewCanvas=canvas;
+  worldRuntime.viewCtx=canvas.getContext("2d",{alpha:false});
+  worldRuntime.viewWidth=rect.width;
+  worldRuntime.viewHeight=rect.height;
+  worldRuntime.viewDpr=dpr;
+  drawFirstPerson();
+}
+
+function centerMap(immediate=false){
+  const size=worldRuntime.tileSize;
+  worldRuntime.targetCamera={
+    x:state.world.player.x*size-worldRuntime.mapWidth/2+size/2,
+    y:state.world.player.y*size-worldRuntime.mapHeight/2+size/2
+  };
+  if(immediate)worldRuntime.camera={...worldRuntime.targetCamera};
+}
+
+function drawMapTile(ctx,x,y,sx,sy,size,terrain,visible){
+  ctx.fillStyle=visible?terrain.color:"#061019";
+  ctx.fillRect(sx,sy,size+1,size+1);
+  if(!visible)return;
+  ctx.strokeStyle="rgba(0,0,0,.12)";
+  ctx.strokeRect(sx+.5,sy+.5,size-1,size-1);
+  ctx.save();
+  ctx.translate(sx+size/2,sy+size/2);
+  ctx.lineWidth=Math.max(1,size*.045);
+  if(terrain.key==="forest"){
+    ctx.fillStyle="rgba(18,52,31,.68)";
+    for(let i=0;i<3;i+=1){const ox=(i-1)*size*.2;ctx.beginPath();ctx.moveTo(ox,-size*.28);ctx.lineTo(ox-size*.16,size*.22);ctx.lineTo(ox+size*.16,size*.22);ctx.closePath();ctx.fill()}
+  }else if(terrain.key==="mountain"){
+    ctx.fillStyle="rgba(30,40,48,.62)";
+    ctx.beginPath();ctx.moveTo(-size*.4,size*.3);ctx.lineTo(-size*.08,-size*.34);ctx.lineTo(size*.12,size*.06);ctx.lineTo(size*.29,-size*.2);ctx.lineTo(size*.43,size*.3);ctx.closePath();ctx.fill();
+  }else if(terrain.key==="lake"){
+    ctx.strokeStyle="rgba(156,226,255,.34)";
+    for(let i=-1;i<=1;i+=1){ctx.beginPath();ctx.moveTo(-size*.34,i*size*.13);ctx.quadraticCurveTo(-size*.17,i*size*.13-size*.08,0,i*size*.13);ctx.quadraticCurveTo(size*.17,i*size*.13+size*.08,size*.34,i*size*.13);ctx.stroke()}
+  }else if(terrain.key==="swamp"){
+    ctx.strokeStyle="rgba(172,190,115,.42)";
+    for(let i=-2;i<=2;i+=1){ctx.beginPath();ctx.moveTo(i*size*.14,size*.28);ctx.lineTo(i*size*.1,-size*(.12+Math.abs(i)*.025));ctx.stroke()}
+  }else if(terrain.key==="desert"){
+    ctx.strokeStyle="rgba(255,223,157,.34)";
+    ctx.beginPath();ctx.moveTo(-size*.4,size*.12);ctx.quadraticCurveTo(-size*.1,-size*.18,size*.12,size*.08);ctx.quadraticCurveTo(size*.28,size*.25,size*.43,0);ctx.stroke();
+  }else{
+    ctx.strokeStyle="rgba(214,218,126,.3)";
+    for(let i=-2;i<=2;i+=1){ctx.beginPath();ctx.moveTo(i*size*.15,size*.3);ctx.lineTo(i*size*.12,size*.03);ctx.stroke()}
+  }
+  ctx.restore();
+}
+
+function drawMap(){
+  const ctx=worldRuntime.mapCtx;
+  if(!ctx)return;
+  const size=worldRuntime.tileSize;
+  ctx.setTransform(worldRuntime.mapDpr,0,0,worldRuntime.mapDpr,0,0);
+  ctx.fillStyle="#061019";
+  ctx.fillRect(0,0,worldRuntime.mapWidth,worldRuntime.mapHeight);
+  const startX=clamp(Math.floor(worldRuntime.camera.x/size)-1,0,state.world.cols-1);
+  const endX=clamp(Math.ceil((worldRuntime.camera.x+worldRuntime.mapWidth)/size)+1,0,state.world.cols-1);
+  const startY=clamp(Math.floor(worldRuntime.camera.y/size)-1,0,state.world.rows-1);
+  const endY=clamp(Math.ceil((worldRuntime.camera.y+worldRuntime.mapHeight)/size)+1,0,state.world.rows-1);
+  for(let y=startY;y<=endY;y+=1){
+    for(let x=startX;x<=endX;x+=1){
+      drawMapTile(ctx,x,y,x*size-worldRuntime.camera.x,y*size-worldRuntime.camera.y,size,terrainAt(x,y),state.world.visible[windex(x,y)]);
+    }
+  }
+  if(state.world.route.length){
+    ctx.strokeStyle="rgba(255,227,155,.9)";
+    ctx.lineWidth=Math.max(2,size*.08);
+    ctx.setLineDash([size*.2,size*.14]);
+    ctx.beginPath();
+    state.world.route.forEach((point,index)=>{
+      const sx=point.x*size-worldRuntime.camera.x+size/2;
+      const sy=point.y*size-worldRuntime.camera.y+size/2;
+      index?ctx.lineTo(sx,sy):ctx.moveTo(sx,sy);
+    });
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  state.world.landmarks.forEach(mark=>{
+    if(!state.world.visible[windex(mark.x,mark.y)])return;
+    const sx=mark.x*size-worldRuntime.camera.x+size/2;
+    const sy=mark.y*size-worldRuntime.camera.y+size/2;
+    ctx.fillStyle=mark.discovered?"#f1c75b":"#9ba8b5";
+    ctx.beginPath();ctx.arc(sx,sy,size*.15,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle="rgba(241,199,91,.45)";
+    ctx.beginPath();ctx.arc(sx,sy,size*.28,0,Math.PI*2);ctx.stroke();
+  });
+  state.world.encounters.forEach(node=>{
+    if(node.resolved||!node.discovered||!state.world.visible[windex(node.x,node.y)])return;
+    const sx=node.x*size-worldRuntime.camera.x+size/2;
+    const sy=node.y*size-worldRuntime.camera.y+size/2;
+    ctx.fillStyle="#f06773";
+    ctx.beginPath();ctx.moveTo(sx,sy-size*.18);ctx.lineTo(sx+size*.15,sy+size*.14);ctx.lineTo(sx-size*.15,sy+size*.14);ctx.closePath();ctx.fill();
+  });
+  state.world.npcs.forEach(npc=>{
+    if(!npc.active||!state.world.visible[windex(npc.x,npc.y)])return;
+    const sx=npc.x*size-worldRuntime.camera.x+size/2;
+    const sy=npc.y*size-worldRuntime.camera.y+size/2;
+    ctx.fillStyle="#65dcec";
+    ctx.beginPath();ctx.arc(sx,sy,size*.11,0,Math.PI*2);ctx.fill();
+  });
+  const px=state.world.player.x*size-worldRuntime.camera.x+size/2;
+  const py=state.world.player.y*size-worldRuntime.camera.y+size/2;
+  ctx.save();
+  ctx.translate(px,py);
+  ctx.rotate(facingVectors[state.world.facing].rotation*Math.PI/180);
+  ctx.fillStyle="#0d1822";
+  ctx.strokeStyle="#ffe39b";
+  ctx.lineWidth=2;
+  ctx.beginPath();ctx.arc(0,0,size*.29,0,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.fillStyle="#ffe39b";
+  ctx.beginPath();ctx.moveTo(0,-size*.22);ctx.lineTo(size*.14,size*.13);ctx.lineTo(-size*.14,size*.13);ctx.closePath();ctx.fill();
+  ctx.restore();
+  const gradient=ctx.createRadialGradient(px,py,size*1.1,px,py,size*4.5);
+  gradient.addColorStop(0,"rgba(6,16,25,0)");
+  gradient.addColorStop(1,"rgba(6,16,25,.36)");
+  ctx.fillStyle=gradient;
+  ctx.fillRect(0,0,worldRuntime.mapWidth,worldRuntime.mapHeight);
+}
+
+function closeVariant(terrain){
+  return hashString(`${state.world.seed}:${state.world.player.x}:${state.world.player.y}:${state.world.facing}:${terrain}`)%3;
+}
+
+function scenePair(){
+  const current=terrainAt(state.world.player.x,state.world.player.y)?.key||"grass";
+  const vector=facingVectors[state.world.facing];
+  const next=terrainAt(state.world.player.x+vector.x,state.world.player.y+vector.y)?.key||current;
+  return{current,next,variant:closeVariant(current)};
+}
+
+function roundedHill(ctx,x,y,width,height,color){
+  ctx.fillStyle=color;
+  ctx.beginPath();ctx.moveTo(x-width/2,y);ctx.quadraticCurveTo(x,y-height,x+width/2,y);ctx.lineTo(x+width/2,y+height);ctx.lineTo(x-width/2,y+height);ctx.closePath();ctx.fill();
+}
+
+function drawDistantTerrain(ctx,key,width,height,horizon,palette){
+  ctx.save();
+  if(key==="forest"){
+    ctx.fillStyle=palette.horizon;
+    for(let i=0;i<18;i+=1){const x=i*width/17,peak=horizon-(18+(i*17%31));ctx.beginPath();ctx.moveTo(x-28,horizon+24);ctx.lineTo(x,peak);ctx.lineTo(x+28,horizon+24);ctx.closePath();ctx.fill()}
+  }else if(key==="lake"){
+    const water=ctx.createLinearGradient(0,horizon,0,height);water.addColorStop(0,palette.horizon);water.addColorStop(1,palette.ground);ctx.fillStyle=water;ctx.fillRect(0,horizon,width,height-horizon);ctx.strokeStyle="rgba(220,249,255,.34)";for(let i=0;i<6;i+=1){const y=horizon+12+i*(height-horizon)/7;ctx.beginPath();ctx.moveTo(0,y);ctx.quadraticCurveTo(width*.35,y-4,width*.62,y);ctx.quadraticCurveTo(width*.82,y+4,width,y-1);ctx.stroke()}
+  }else if(key==="grass"){
+    roundedHill(ctx,width*.25,horizon+12,width*.7,70,palette.horizon);roundedHill(ctx,width*.74,horizon+18,width*.82,82,palette.ground);
+  }else if(key==="swamp"){
+    ctx.fillStyle=palette.horizon;ctx.fillRect(0,horizon,width,height-horizon);ctx.strokeStyle="rgba(25,43,37,.88)";ctx.lineWidth=7;for(let i=0;i<9;i+=1){const x=(i+.3)*width/9,top=horizon-35-(i*23%45);ctx.beginPath();ctx.moveTo(x,horizon+30);ctx.lineTo(x+(i%2?8:-7),top);ctx.stroke()}
+  }else if(key==="desert"){
+    roundedHill(ctx,width*.28,horizon+20,width*.82,62,palette.horizon);roundedHill(ctx,width*.78,horizon+28,width*.9,76,palette.ground);
+  }else{
+    ctx.fillStyle=palette.horizon;for(let i=0;i<5;i+=1){const x=i*width/4,peak=horizon-55-(i*37%65);ctx.beginPath();ctx.moveTo(x-width*.22,horizon+50);ctx.lineTo(x,peak);ctx.lineTo(x+width*.25,horizon+50);ctx.closePath();ctx.fill()}
+  }
+  ctx.restore();
+}
+
+function drawForegroundTerrain(ctx,key,width,height,horizon,palette,time,variant){
+  ctx.save();
+  if(key!=="lake"){
+    const ground=ctx.createLinearGradient(0,horizon,0,height);ground.addColorStop(0,palette.ground);ground.addColorStop(1,"#101918");ctx.fillStyle=ground;ctx.fillRect(0,horizon,width,height-horizon);
+  }
+  if(key==="forest"){
+    const layouts=[[[0,28,31],[0,82,22],[1,8,28],[1,62,36]],[[0,4,38],[0,58,27],[1,30,32],[1,92,23]],[[0,20,25],[0,102,34],[1,0,42],[1,76,24]]][variant];
+    ctx.fillStyle="#17291e";layouts.forEach(([side,offset,trunkWidth])=>{const x=side===0?offset:width-offset-trunkWidth;ctx.fillRect(x,0,trunkWidth,height)});
+    const colors=["rgba(28,69,38,.97)","rgba(39,92,51,.94)","rgba(19,55,32,.96)"];
+    for(let i=0;i<7;i+=1){const side=i%2,baseX=side===0?width*(.06+i*.04):width-width*(.07+i*.035),baseY=height*.8-(i%3)*18,scale=.7+(i%3)*.12;ctx.fillStyle="#203124";ctx.fillRect(baseX-7,baseY-70,14,94);for(let tier=0;tier<3;tier+=1){const tip=baseY-108-tier*24,treeWidth=(92-tier*18)*scale;ctx.fillStyle=colors[(i+tier+variant)%colors.length];ctx.beginPath();ctx.moveTo(baseX,tip);ctx.lineTo(baseX-treeWidth*.5,tip+55-tier*8);ctx.lineTo(baseX+treeWidth*.5,tip+55-tier*8);ctx.closePath();ctx.fill()}}
+  }else if(key==="lake"){
+    const water=ctx.createLinearGradient(0,horizon,0,height);water.addColorStop(0,palette.horizon);water.addColorStop(1,"#0d3548");ctx.fillStyle=water;ctx.fillRect(0,horizon,width,height-horizon);ctx.strokeStyle="rgba(218,247,255,.26)";for(let i=0;i<8+variant*2;i+=1){const y=horizon+18+i*(height-horizon)/(8+variant*2);ctx.beginPath();ctx.moveTo(0,y+Math.sin(time+i)*2);ctx.bezierCurveTo(width*.25,y-5,width*.7,y+6,width,y);ctx.stroke()}
+  }else if(key==="grass"){
+    ctx.strokeStyle="rgba(209,218,116,.58)";ctx.lineWidth=2;for(let i=0;i<40+variant*8;i+=1){const x=i*(83+variant*7)%width,base=height-(i%5)*8,blade=18+(i*17%35);ctx.beginPath();ctx.moveTo(x,base);ctx.quadraticCurveTo(x+Math.sin(time+i)*5,base-blade*.55,x+(i%2?4:-4),base-blade);ctx.stroke()}
+  }else if(key==="swamp"){
+    ctx.fillStyle="rgba(21,58,49,.72)";for(let i=0;i<4+variant;i+=1){ctx.beginPath();ctx.ellipse((i+.5)*width/(4+variant),height-30-(i%2)*18,55,18,0,0,Math.PI*2);ctx.fill()}ctx.strokeStyle="rgba(174,191,107,.58)";ctx.lineWidth=2;for(let i=0;i<28+variant*6;i+=1){const x=i*(47+variant*5)%width;ctx.beginPath();ctx.moveTo(x,height);ctx.lineTo(x+(i%2?6:-6),height-35-(i*11%40));ctx.stroke()}
+  }else if(key==="desert"){
+    ctx.strokeStyle="rgba(255,226,164,.35)";ctx.lineWidth=2;for(let i=0;i<5;i+=1){const y=horizon+40+i*38;ctx.beginPath();ctx.moveTo(0,y);ctx.quadraticCurveTo(width*.25,y-18-variant*3,width*.5,y);ctx.quadraticCurveTo(width*.75,y+18+variant*3,width,y-3);ctx.stroke()}ctx.fillStyle="#71533d";for(let i=0;i<5+variant;i+=1){const x=(i*97+variant*31)%width,y=height-18-(i%3)*22;ctx.beginPath();ctx.ellipse(x,y,12+i%3*5,7+i%2*3,-.25,0,Math.PI*2);ctx.fill()}
+  }else{
+    ctx.fillStyle="#293641";ctx.beginPath();ctx.moveTo(0,height);ctx.lineTo(0,height*.42);ctx.lineTo(width*.12,height*.58);ctx.lineTo(width*.2,height*.35);ctx.lineTo(width*.31,height*.61);ctx.lineTo(width*.38,height);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(width,height);ctx.lineTo(width,height*.38);ctx.lineTo(width*.86,height*.55);ctx.lineTo(width*.78,height*.31);ctx.lineTo(width*.65,height*.62);ctx.lineTo(width*.58,height);ctx.closePath();ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawFirstPerson(){
+  const ctx=worldRuntime.viewCtx;
+  if(!ctx)return;
+  const width=worldRuntime.viewWidth;
+  const height=worldRuntime.viewHeight;
+  const pair=scenePair();
+  const nextPalette=PALETTES[pair.next];
+  const currentPalette=PALETTES[pair.current];
+  ctx.setTransform(worldRuntime.viewDpr,0,0,worldRuntime.viewDpr,0,0);
+  const bob=Math.sin(worldRuntime.sceneTime*8)*worldRuntime.sceneTransition*4;
+  ctx.save();ctx.translate(0,bob);
+  const sky=ctx.createLinearGradient(0,0,0,height*.65);sky.addColorStop(0,nextPalette.skyTop);sky.addColorStop(1,nextPalette.skyBottom);ctx.fillStyle=sky;ctx.fillRect(0,-8,width,height+16);
+  const horizon=height*.52;
+  ctx.globalAlpha=.22;ctx.fillStyle=nextPalette.mist;ctx.fillRect(0,horizon-22,width,54);ctx.globalAlpha=1;
+  drawDistantTerrain(ctx,pair.next,width,height,horizon,nextPalette);
+  drawForegroundTerrain(ctx,pair.current,width,height,horizon,currentPalette,worldRuntime.sceneTime,pair.variant);
+  const landmark=currentLandmark();
+  if(landmark){ctx.fillStyle="rgba(255,227,155,.8)";ctx.beginPath();ctx.moveTo(width*.5,horizon-55);ctx.lineTo(width*.53,horizon-15);ctx.lineTo(width*.47,horizon-15);ctx.closePath();ctx.fill();ctx.fillStyle="rgba(5,11,17,.72)";ctx.fillRect(width*.38,horizon-12,width*.24,26);ctx.fillStyle="#ffe39b";ctx.font="700 11px system-ui";ctx.textAlign="center";ctx.fillText(landmark.name,width*.5,horizon+5)}
+  const vignette=ctx.createRadialGradient(width*.5,height*.48,width*.12,width*.5,height*.48,width*.72);vignette.addColorStop(0,"rgba(0,0,0,0)");vignette.addColorStop(1,"rgba(0,0,0,.46)");ctx.fillStyle=vignette;ctx.fillRect(0,0,width,height);
+  if(worldRuntime.sceneTransition>0){ctx.fillStyle=`rgba(255,245,210,${worldRuntime.sceneTransition*.08})`;ctx.fillRect(0,0,width,height)}
+  ctx.restore();
+}
+
+function renderWorld(){
+  const pair=scenePair();
+  const landmark=currentLandmark();
+  const terrain=terrainAt(state.world.player.x,state.world.player.y);
+  const vector=facingVectors[state.world.facing];
+  const ahead=terrainAt(state.world.player.x+vector.x,state.world.player.y+vector.y)||terrain;
+  $("#scene-location").textContent=landmark?.name||"Uncharted Wilds";
+  $("#scene-pair").textContent=`${TERRAIN[pair.current].name} V${pair.variant+1} → ${TERRAIN[pair.next].name}`;
+  $("#compass-badge").style.setProperty("--rotation",`${vector.rotation}deg`);
+  $("#map-coordinate").textContent=`${state.world.player.x}, ${state.world.player.y} · ${vector.label}`;
+  $("#map-state").textContent=state.world.interior?`Inside ${LOCATION_DEFS[state.world.interior.locationId].name}`:state.world.route.length?"Routing":"Exploring";
+  $("#current-terrain").textContent=terrain.name;
+  $("#ahead-terrain").textContent=ahead.name;
+  $("#world-discovered").textContent=state.world.visible.reduce((sum,value)=>sum+(value?1:0),0);
+  $("#world-steps").textContent=state.world.steps;
+  $("#world-seed").value=state.world.seed;
+  $("#terrain-effects").innerHTML=`<div class="terrain-effect"><span>Move cost</span><strong>${terrainTravelCost(terrain)} stamina</strong></div><div class="terrain-effect"><span>Encounter chance</span><strong>${Math.round(terrain.encounter*100)}%</strong></div><div class="terrain-effect"><span>Terrain rule</span><strong>${terrain.effect}</strong></div>`;
+  const npc=currentWorldNpc();
+  const encounter=currentEncounterNode();
+  if(state.world.interior){
+    const definition=LOCATION_DEFS[state.world.interior.locationId];
+    $("#presence-panel").innerHTML=`<h4>${definition.name}</h4><p>You are inside ${definition.rooms.find(room=>room.id===state.world.interior.room)?.name}. World travel is paused until you exit.</p><button class="mini" data-interior-action="exit">Exit location</button>`;
+  }else if(encounter){
+    $("#presence-panel").innerHTML=`<h4>${ENCOUNTERS[encounter.encounterId]?.name||"Encounter"}</h4><p>An unresolved encounter occupies this tile. Starting combat preserves this node so victory can resolve it.</p><button class="mini" data-world-encounter="${encounter.id}">Begin encounter</button>`;
+  }else if(landmark){
+    $("#presence-panel").innerHTML=`<h4>${landmark.name}</h4><p>${npc?`${NPC_DEFS[npc.id].name} is present. `:""}Enter the location to access rooms, actions, and interior NPCs.</p><button class="mini" data-enter-location>Enter location</button>`;
+  }else if(npc){
+    $("#presence-panel").innerHTML=`<h4>${NPC_DEFS[npc.id].name}</h4><p>${NPC_DEFS[npc.id].role} is present on this map tile.</p><button class="mini" data-start-npc="${npc.id}">Talk</button>`;
+  }else{
+    $("#presence-panel").innerHTML=`<h4>No immediate presence</h4><p>Continue exploring, gather resources, route to visible tiles, or locate a landmark.</p><button class="mini" data-demo="gather">Gather terrain</button>`;
+  }
+  const progress=worldRuntime.routeOrigin?100-state.world.route.length/worldRuntime.routeOrigin*100:0;
+  $("#route-progress").style.setProperty("--route",`${state.world.route.length?progress:0}%`);
+  drawMap();
+  drawFirstPerson();
+}
+
+/* ========================================================================== */
+/* SECTION 13 — RENDER: NPCS AND QUESTS                                        */
+/* ========================================================================== */
+
+function renderNpcs(){
+  const available=availableNpcs();
+  $("#npc-list").innerHTML=available.length?available.map(npc=>{
+    const definition=NPC_DEFS[npc.id];
+    return`<button class="npc-card ${selectedNpcId===npc.id?"active":""}" data-start-npc="${npc.id}"><i>${definition.glyph}</i><span><b>${definition.name}</b><small>${definition.role} · ${state.world.interior?`room ${npc.room}`:"world tile"}</small></span></button>`;
+  }).join(""):`<div class="panel"><strong>No NPC present</strong><p class="section-note">NPCs appear only at their world landmark or assigned interior room.</p></div>`;
+  const node=DIALOGUE[state.dialogue.node];
+  const npcDefinition=state.dialogue.activeNpc?NPC_DEFS[state.dialogue.activeNpc]:null;
+  if(!node||!npcDefinition){
+    $("#dialogue-avatar").textContent="?";
+    $("#dialogue-speaker").textContent="No active speaker";
+    $("#dialogue-context").textContent="Reach an NPC and begin conversation.";
+    $("#dialogue-line").textContent="Dialogue is location-gated and driven by serializable conditions and effects.";
+    $("#dialogue-choices").innerHTML="";
+    return;
+  }
+  $("#dialogue-avatar").textContent=npcDefinition.glyph;
+  $("#dialogue-speaker").textContent=npcDefinition.name;
+  $("#dialogue-context").textContent=`${npcDefinition.role} · ${state.world.interior?LOCATION_DEFS[state.world.interior.locationId].name:"World map"}`;
+  $("#dialogue-line").textContent=node.line;
+  $("#dialogue-choices").innerHTML=node.choices.map((option,index)=>{
+    const allowed=conditionsPass(option.conditions);
+    const reason=option.conditions?.map(condition=>condition.type==="ITEM"?`Requires ${condition.amount} ${condition.id}`:condition.type==="GOLD"?`Requires ${condition.amount} gold`:condition.type).join(" · ")||`Leads to ${option.to}`;
+    return`<button class="choice-button" data-dialogue-choice="${index}" ${allowed?"":"disabled"}><b>${escapeHTML(option.text)}</b><small>${allowed?`Leads to ${option.to}`:reason}</small></button>`;
+  }).join("");
+}
+
+function questComplete(quest){
+  const questState=state.quests[quest.id];
+  return quest.objectives.every(objective=>(questState.progress[objective.id]||0)>=objective.target);
+}
+
+function renderQuests(){
+  ensureQuests();
+  $("#quest-list").innerHTML=QUEST_DEFS.map(quest=>{
+    const questState=state.quests[quest.id];
+    const complete=questComplete(quest);
+    const count=quest.objectives.filter(objective=>(questState.progress[objective.id]||0)>=objective.target).length;
+    return`<button class="quest-card ${selectedQuestId===quest.id?"active":""}" data-quest="${quest.id}"><b>${questState.pinned?"◆ ":""}${quest.title}</b><small>${complete?"Completed":`${count}/${quest.objectives.length} objectives`} · ${quest.type}</small></button>`;
+  }).join("");
+  const quest=QUEST_DEFS.find(entry=>entry.id===selectedQuestId)||QUEST_DEFS[0];
+  const questState=state.quests[quest.id];
+  $("#quest-detail").innerHTML=`<div class="toolbar spread"><div><strong>${quest.title}</strong><p class="section-note">${quest.description}</p></div><button class="mini" data-pin-quest="${quest.id}">${questState.pinned?"Pinned":"Pin"}</button></div><div class="objective-list" style="margin-top:10px">${quest.objectives.map(objective=>{const value=questState.progress[objective.id]||0;const done=value>=objective.target;return`<div class="objective ${done?"done":""}"><span class="check">✓</span><span><b>${objective.text}</b><small>${value} / ${objective.target} · listens for ${objective.event}</small></span><span class="chip">${done?"DONE":"LIVE"}</span></div>`}).join("")}</div><div class="faction-grid">${Object.entries(state.factions).map(([id,value])=>`<div class="faction-row"><span>${id.replace(/([A-Z])/g," $1")}</span><div class="faction-track"><span style="--position:${clamp((value+100)/2,0,100)}%"></span></div><output>${value}</output></div>`).join("")}</div>`;
+}
+
+/* ========================================================================== */
+/* SECTION 14 — RENDER: COMBAT                                                 */
+/* ========================================================================== */
+
+function unitPosition(unit,index){
+  if(unit.team==="party"){
+    const position=formationPosition(unit.id);
+    return{x:12+position.row*12,y:26+position.x*23,scale:1-position.row*.08,lunge:"18px"};
+  }
+  const enemies=state.combat.units.filter(entry=>entry.team==="enemy");
+  const enemyIndex=enemies.findIndex(entry=>entry.id===unit.id);
+  return{x:79+Math.floor(enemyIndex/3)*9,y:24+(enemyIndex%3)*25,scale:1,lunge:"-18px"};
+}
+
+function renderCombat(){
+  if(!state.combat.active){
+    $("#turn-strip").innerHTML=`<span class="chip">No active combat</span>`;
+    $("#party-field").innerHTML="";
+    $("#enemy-field").innerHTML="";
+    $("#ability-grid").innerHTML=`<button class="ability-button" data-demo="wild-combat"><b>Start demonstration</b><small>Launch a grass encounter</small></button>`;
+    $("#combat-log").textContent="World encounters can launch this connected combat engine.";
+    $("#combat-round").textContent="—";
+    return;
+  }
+  const active=activeUnit();
+  $("#combat-round").textContent=state.combat.round;
+  $("#turn-strip").innerHTML=state.combat.queue.map((id,index)=>{
+    const unit=state.combat.units.find(entry=>entry.id===id);
+    if(!unit||unit.hp<=0)return"";
+    return`<div class="turn-chip ${index===state.combat.index?"active":""}"><b>${unit.name}</b><small>${unit.team==="enemy"?ABILITIES[unit.intent]?.name||unit.intent:`${unit.hp} HP`}</small></div>`;
+  }).join("");
+  const pending=state.combat.pending;
+  $("#target-banner").classList.toggle("open",Boolean(pending));
+  $("#target-text").textContent=pending?`Select a valid target for ${ABILITIES[pending.abilityId].name}.`:"Select a target.";
+  for(const team of ["party","enemy"]){
+    const units=state.combat.units.filter(unit=>unit.team===team);
+    const container=$(team==="party"?"#party-field":"#enemy-field");
+    container.innerHTML=units.map((unit,index)=>{
+      const position=unitPosition(unit,index);
+      const valid=pending?.validTargets.includes(unit.id);
+      const invalid=Boolean(pending)&&!valid;
+      const activeClass=active?.id===unit.id?"active-unit":"";
+      return`<button class="combat-unit ${valid?"valid-target":""} ${invalid?"invalid-target":""} ${activeClass} ${unit.hp<=0?"defeated":""}" data-unit-id="${unit.id}" style="--x:${position.x}%;--y:${position.y}%;--scale:${position.scale};--lunge:${position.lunge}" ${valid?"":"disabled"}>${unit.team==="enemy"&&unit.hp>0?`<span class="intent-badge">${ABILITIES[unit.intent]?.name||unit.intent}</span>`:""}${unitVector(unit)}<span class="unit-name">${unit.name}</span><span class="unit-bars"><span class="unit-bar"><span style="--value:${clamp(unit.hp/unit.maxHp*100,0,100)}%;--bar:#f06773"></span></span>${unit.maxMana?`<span class="unit-bar"><span style="--value:${clamp(unit.mana/unit.maxMana*100,0,100)}%;--bar:#568eff"></span></span>`:""}</span></button>`;
+    }).join("");
+  }
+  const playerTurn=active?.team==="party"&&!state.combat.busy&&!state.combat.result;
+  $("#ability-grid").innerHTML=active?.team==="party"?active.abilities.map(id=>{
+    const ability=ABILITIES[id];
+    const usable=playerTurn&&canUseAbility(active,ability);
+    const cost=ability.resource==="mana"?`${ability.cost} MP`:ability.resource==="item"?`${itemCount("health-tonic")} tonics`:ability.target;
+    return`<button class="ability-button" data-ability="${id}" ${usable?"":"disabled"}><b>${ability.name}</b><small>${cost} · ${ability.description}</small></button>`;
+  }).join(""):`<button class="ability-button" disabled><b>${state.combat.result?state.combat.result.toUpperCase():"Enemy turn"}</b><small>${active?.name||"Combat resolved"}</small></button>`;
+  $("#combat-log").textContent=state.combat.log.slice(-10).join("\n");
+  renderFormation();
+  if(active?.team==="enemy"&&!state.combat.busy&&!state.combat.result)queueEnemyTurn();
+}
+
+function renderFormation(){
+  const members={aven:{name:"Aven",color:"#f1c75b"},lyra:{name:"Lyra",color:"#b38dff"},tor:{name:"Tor",color:"#63dfa0"}};
+  $("#formation-grid").innerHTML=Array.from({length:9},(_,slot)=>{
+    const memberId=Object.keys(state.party.formation).find(id=>state.party.formation[id]===slot);
+    const member=memberId?members[memberId]:null;
+    return`<button class="formation-cell" data-formation-slot="${slot}">${member?`<span class="party-token ${state.party.selectedFormation===memberId?"selected":""}" style="--token:${member.color}" data-formation-member="${memberId}">${member.name}</span>`:""}</button>`;
+  }).join("");
+  const synergy=formationSynergies();
+  const activeNames=[synergy.shieldline&&"Shieldline",synergy.arcConduit&&"Arc Conduit",synergy.frontGuard&&"Front Guard"].filter(Boolean);
+  $("#formation-summary").textContent=activeNames.join(" · ")||"No synergy";
+}
+
+/* ========================================================================== */
+/* SECTION 15 — RENDER: ECONOMY, INTERIORS, PRODUCTION                         */
+/* ========================================================================== */
+
+function renderLootMarket(){
+  const loot=state.loot.current;
+  if(loot){
+    const color=RARITY[loot.rarity];
+    $("#loot-card").style.setProperty("--rarity",color);
+    $("#loot-card").innerHTML=`<div><div class="loot-icon">${itemIcon(loot.type,color)}</div><h4>${escapeHTML(loot.name)}</h4><p>${loot.rarity} · ${loot.value} gold · seed ${loot.seed}</p><div class="effect-list">${loot.affixes.map(affix=>`<div class="effect-line"><span>${affix.stat}</span><strong>+${affix.value}</strong></div>`).join("")}</div></div>`;
+  }else{
+    $("#loot-card").style.setProperty("--rarity",RARITY.common);
+    $("#loot-card").innerHTML=`<div><h4>No unclaimed loot</h4><p>Win an encounter or generate a showroom item.</p></div>`;
+  }
+  $("#wallet").textContent=state.wallet;
+  $("#market-day").textContent=state.market.day;
+  $("#market-list").innerHTML=state.market.stock.map(item=>{
+    const price=marketPrice(item);
+    return`<div class="market-item"><span><b>${item.name}</b><small>${item.stock} stock · ${Math.round(item.demand*100)}% demand</small></span><button class="mini" data-buy="${item.definitionId}" ${item.stock<=0||state.wallet<price?"disabled":""}>${price}g</button></div>`;
+  }).join("");
+}
+
+function interiorPalette(kind){
+  if(kind==="shrine")return{wall:"#223b48",floor:"#162a35",light:"#9be5ef",accent:"#b38dff"};
+  if(kind==="ruin")return{wall:"#40382f",floor:"#27231f",light:"#ff9a58",accent:"#f1c75b"};
+  if(kind==="camp")return{wall:"#273929",floor:"#18251a",light:"#f1c75b",accent:"#63dfa0"};
+  return{wall:"#2e4152",floor:"#1b2936",light:"#f1c75b",accent:"#65dcec"};
+}
+
+function renderInterior(){
+  const svg=$("#interior-svg");
+  if(!state.world.interior){
+    $("#interior-title").textContent="No interior entered";
+    $("#interior-description").textContent="Reach a landmark on the generated world map and choose Enter Location.";
+    $("#room-list").innerHTML="";
+    $("#interior-actions").innerHTML="";
+    svg.innerHTML=`<rect width="760" height="420" fill="#08111b"/><circle cx="380" cy="210" r="95" fill="none" stroke="#293d50" stroke-width="2" stroke-dasharray="8 12"/><path d="M330 210h100M380 160v100" stroke="#405a70" stroke-width="3"/><text x="380" y="330" fill="#93a3b4" text-anchor="middle" font-family="system-ui" font-size="18">NO LOCATION ENTERED</text>`;
+    return;
+  }
+  const definition=LOCATION_DEFS[state.world.interior.locationId];
+  const room=definition.rooms.find(entry=>entry.id===state.world.interior.room);
+  const palette=interiorPalette(definition.kind);
+  $("#interior-title").textContent=`${definition.name} · ${room.name}`;
+  $("#interior-description").textContent=room.description;
+  $("#room-list").innerHTML=definition.rooms.map(entry=>`<button class="room-button ${entry.id===room.id?"active":""}" data-room="${entry.id}"><b>${entry.name}</b><small>${entry.description}</small></button>`).join("");
+  $("#interior-actions").innerHTML=room.actions.map(action=>`<button class="mini" data-interior-action="${action}">${action.replace(/-/g," ")}</button>`).join("")+`<button class="mini" data-interior-action="exit">Exit</button>`;
+  const npc=currentWorldNpc();
+  svg.innerHTML=`<defs><linearGradient id="roomFloor" x1="0" y1="0" x2="0" y2="1"><stop stop-color="${palette.floor}"/><stop offset="1" stop-color="#090e13"/></linearGradient><radialGradient id="roomLight"><stop stop-color="${palette.light}" stop-opacity=".28"/><stop offset="1" stop-color="${palette.light}" stop-opacity="0"/></radialGradient></defs><rect width="760" height="420" fill="${palette.wall}"/><path d="M0 280 180 190h400l180 90v140H0Z" fill="url(#roomFloor)"/><rect x="90" y="70" width="115" height="205" rx="8" fill="#101820" stroke="${palette.accent}" stroke-opacity=".45"/><rect x="555" y="70" width="115" height="205" rx="8" fill="#101820" stroke="${palette.accent}" stroke-opacity=".45"/><circle cx="380" cy="205" r="150" fill="url(#roomLight)"/><path d="M325 292h110l35 84H290Z" fill="#17232d" stroke="${palette.accent}" stroke-opacity=".55"/>${definition.kind==="shrine"?`<circle cx="380" cy="150" r="38" fill="none" stroke="${palette.light}" stroke-width="6"/><path d="M380 96v108M326 150h108" stroke="${palette.light}" stroke-opacity=".5"/>`:definition.kind==="ruin"?`<path d="M250 40 310 150 340 80 390 175 450 60 520 180" fill="none" stroke="#0d1217" stroke-width="28"/>`:`<path d="M345 130h70v110h-70Z" fill="#0c141c" stroke="${palette.light}"/><circle cx="380" cy="180" r="18" fill="${palette.light}" opacity=".65"/>`} ${npc?`<g transform="translate(380 275)"><circle cy="-48" r="22" fill="#d6a47d"/><path d="M-32-15Q0-38 32-15l8 75H-40Z" fill="${palette.accent}"/><text y="88" fill="#f5f1e8" text-anchor="middle" font-family="system-ui" font-size="16">${escapeHTML(NPC_DEFS[npc.id].name)}</text></g>`:""}`;
+}
+
+const aiRuntime={canvas:null,ctx:null,width:0,height:0,dpr:1};
+const fxRuntime={canvas:null,ctx:null,width:0,height:0,dpr:1,particles:[],rings:[]};
+
+function resizeAi(){
+  const canvas=$("#ai-canvas");
+  const rect=canvas.parentElement.getBoundingClientRect();
+  const dpr=Math.min(window.devicePixelRatio||1,1.5);
+  if(!rect.width||!rect.height)return;
+  canvas.width=Math.round(rect.width*dpr);
+  canvas.height=Math.round(rect.height*dpr);
+  aiRuntime.canvas=canvas;
+  aiRuntime.ctx=canvas.getContext("2d",{alpha:false});
+  aiRuntime.width=rect.width;
+  aiRuntime.height=rect.height;
+  aiRuntime.dpr=dpr;
+}
+
+function drawDirector(){
+  const ctx=aiRuntime.ctx;
+  if(!ctx)return;
+  const width=aiRuntime.width;
+  const height=aiRuntime.height;
+  const pressure=encounterPressure();
+  ctx.setTransform(aiRuntime.dpr,0,0,aiRuntime.dpr,0,0);
+  ctx.fillStyle="#08111b";ctx.fillRect(0,0,width,height);
+  ctx.strokeStyle="rgba(101,220,236,.08)";
+  for(let x=0;x<width;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,height);ctx.stroke()}
+  for(let y=0;y<height;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(width,y);ctx.stroke()}
+  const nodes=state.world.encounters.filter(node=>!node.resolved).slice(0,14);
+  nodes.forEach((node,index)=>{
+    const x=24+(index%5)*(width-48)/4;
+    const y=58+Math.floor(index/5)*70;
+    ctx.fillStyle=node.discovered?"#f06773":"#536171";
+    ctx.beginPath();ctx.arc(x,y,7+(pressure/100)*5,0,Math.PI*2);ctx.fill();
+    if(index){ctx.strokeStyle="rgba(240,103,115,.12)";ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(width*.5,height*.82);ctx.stroke()}
+  });
+  ctx.fillStyle="#f1c75b";ctx.beginPath();ctx.arc(width*.5,height*.82,12,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle="#d8e2eb";ctx.font="700 11px system-ui";ctx.textAlign="left";ctx.fillText(`DIRECTOR PRESSURE ${Math.round(pressure)}%`,15,23);
+  ctx.fillStyle="#93a3b4";ctx.font="10px system-ui";ctx.fillText(`${nodes.length} unresolved encounter nodes visualized`,15,39);
+}
+
+function resizeFx(){
+  const canvas=$("#fx-canvas");
+  const rect=canvas.parentElement.getBoundingClientRect();
+  const dpr=Math.min(window.devicePixelRatio||1,1.5);
+  if(!rect.width||!rect.height)return;
+  canvas.width=Math.round(rect.width*dpr);
+  canvas.height=Math.round(rect.height*dpr);
+  fxRuntime.canvas=canvas;
+  fxRuntime.ctx=canvas.getContext("2d");
+  fxRuntime.width=rect.width;
+  fxRuntime.height=rect.height;
+  fxRuntime.dpr=dpr;
+}
+
+function emitFx(type){
+  const presets={damage:{color:"#f06773",count:24},heal:{color:"#63dfa0",count:22},world:{color:"#65dcec",count:20},quest:{color:"#f1c75b",count:40},victory:{color:"#b38dff",count:54}};
+  const preset=presets[type]||presets.world;
+  const x=fxRuntime.width*.5;
+  const y=fxRuntime.height*.55;
+  const available=Math.max(0,160-fxRuntime.particles.length);
+  for(let i=0;i<Math.min(preset.count,available);i+=1){
+    const angle=Math.random()*Math.PI*2;
+    const speed=50+Math.random()*170;
+    fxRuntime.particles.push({x,y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,age:0,life:.45+Math.random()*.7,size:2+Math.random()*4,color:preset.color});
+  }
+  fxRuntime.rings.push({x,y,age:0,life:.55,color:preset.color});
+  if(fxRuntime.rings.length>7)fxRuntime.rings.shift();
+}
+
+function updateFx(dt){
+  const ctx=fxRuntime.ctx;
+  if(!ctx)return;
+  fxRuntime.particles.forEach(particle=>{particle.age+=dt;particle.vy+=60*dt;particle.x+=particle.vx*dt;particle.y+=particle.vy*dt;particle.vx*=Math.pow(.96,dt*60)});
+  fxRuntime.particles=fxRuntime.particles.filter(particle=>particle.age<particle.life);
+  fxRuntime.rings.forEach(ring=>ring.age+=dt);
+  fxRuntime.rings=fxRuntime.rings.filter(ring=>ring.age<ring.life);
+  ctx.setTransform(fxRuntime.dpr,0,0,fxRuntime.dpr,0,0);
+  ctx.clearRect(0,0,fxRuntime.width,fxRuntime.height);
+  fxRuntime.rings.forEach(ring=>{const progress=ring.age/ring.life;ctx.globalAlpha=(1-progress)*.7;ctx.strokeStyle=ring.color;ctx.lineWidth=2;ctx.beginPath();ctx.arc(ring.x,ring.y,10+progress*100,0,Math.PI*2);ctx.stroke()});
+  fxRuntime.particles.forEach(particle=>{const progress=particle.age/particle.life;ctx.globalAlpha=Math.sin(Math.PI*progress);ctx.fillStyle=particle.color;ctx.beginPath();ctx.arc(particle.x,particle.y,particle.size,0,Math.PI*2);ctx.fill()});
+  ctx.globalAlpha=1;
+}
+
+function renderProduction(){
+  $("#aggression").value=state.director.aggression;
+  $("#alert").value=state.director.alert;
+  $("#aggression-out").value=`${state.director.aggression}%`;
+  $("#alert-out").value=`${state.director.alert}%`;
+  drawDirector();
+  renderInterior();
+}
+
+/* ========================================================================== */
+/* SECTION 16 — SAVE AND DEBUG                                                 */
+/* ========================================================================== */
+
+const memoryStorage=new Map();
+const saveKey=index=>`forge-rpg-m3-slot-${index}`;
+
+function storageGet(key){
+  try{
+    const local=localStorage.getItem(key);
+    if(local!==null)return local;
+  }catch(_error){}
+  return memoryStorage.get(key)||null;
+}
+
+function storageSet(key,value){
+  let mode="memory";
+  try{localStorage.setItem(key,value);mode="local"}catch(_error){memoryStorage.set(key,value)}
+  if(mode==="local")memoryStorage.set(key,value);
+  return mode;
+}
+
+function storageRemove(key){
+  try{localStorage.removeItem(key)}catch(_error){}
+  memoryStorage.delete(key);
+}
+
+function serializableState(){
+  const copy=deepClone(state);
+  copy.telemetry=copy.telemetry.slice(-80);
+  copy.world.route=[];
+  copy.party.selectedFormation=null;
+  return copy;
+}
+
+function validateAndMigrate(data){
+  if(!data||typeof data!=="object")throw new Error("Invalid save data");
+  const copy=deepClone(data);
+  if(!copy.version)copy.version=1;
+  if(copy.version<5){copy.world=copy.world||{};copy.world.visible=copy.world.visible||[];copy.world.visited=copy.world.visited||[];copy.version=5}
+  if(copy.version<6){copy.world.npcs=copy.world.npcs||[];copy.world.encounters=copy.world.encounters||[];copy.world.interior=copy.world.interior||null;copy.version=6}
+  if(copy.version!==6||!copy.character||!copy.inventory||!copy.world||!copy.party||!copy.market)throw new Error("Schema validation failed");
+  return copy;
+}
+
+function saveSlot(index){
+  const payload={savedAt:new Date().toISOString(),state:serializableState()};
+  const mode=storageSet(saveKey(index),JSON.stringify(payload));
+  toast(`Slot ${index} saved to ${mode} storage`);
+  publish(domainEvent("SAVE_WRITTEN",{slot:index,mode}));
+  renderSave();
+}
+
+function loadSlot(index){
+  const raw=storageGet(saveKey(index));
+  if(!raw){toast("This slot is empty");return}
+  try{
+    const payload=JSON.parse(raw);
+    state=validateAndMigrate(payload.state);
+    selectedItemId=state.inventory.items[0]?.instanceId||null;
+    selectedQuestId=QUEST_DEFS[0].id;
+    selectedNpcId=null;
+    centerMap(true);
+    worldRuntime.sceneTransition=.7;
+    publish(domainEvent("SAVE_LOADED",{slot:index}));
+    renderAll();
+    toast(`Loaded slot ${index}`);
+  }catch(error){toast(`Load failed: ${error.message}`)}
+}
+
+function exportSlot(index){
+  const raw=storageGet(saveKey(index));
+  if(!raw){toast("Save the slot before exporting");return}
+  const blob=new Blob([raw],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const anchor=document.createElement("a");
+  anchor.href=url;
+  anchor.download=`forge-rpg-milestone-3-slot-${index}.json`;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
+function renderSave(){
+  $("#save-slots").innerHTML=[1,2,3].map(index=>{
+    const raw=storageGet(saveKey(index));
+    let subtitle="Empty slot";
+    if(raw){
+      try{
+        const payload=JSON.parse(raw);
+        subtitle=`Level ${payload.state.character.level} · ${payload.state.world.discoveredLandmarks.length} landmarks · ${new Date(payload.savedAt).toLocaleString()}`;
+      }catch(_error){subtitle="Unreadable save"}
+    }
+    return`<section class="save-slot"><h4>Slot ${index}</h4><p>${subtitle}</p><div class="toolbar"><button class="mini" data-save="${index}">Save</button><button class="mini" data-load="${index}" ${raw?"":"disabled"}>Load</button><button class="mini" data-export="${index}" ${raw?"":"disabled"}>Export</button><button class="mini" data-delete="${index}" ${raw?"":"disabled"}>Clear</button></div></section>`;
+  }).join("");
+  const summary={
+    version:state.version,
+    character:{level:state.character.level,xp:state.character.xp,resources:state.character.resources,statuses:state.character.statuses,equipment:state.character.equipment},
+    world:{seed:state.world.seed,player:state.world.player,facing:state.world.facing,steps:state.world.steps,revealed:state.world.visible.reduce((sum,value)=>sum+(value?1:0),0),discoveredLandmarks:state.world.discoveredLandmarks,unresolvedEncounters:state.world.encounters.filter(node=>!node.resolved).length,interior:state.world.interior},
+    quests:state.quests,
+    combat:{active:state.combat.active,result:state.combat.result,encounter:state.combat.encounter},
+    latestEvents:state.telemetry.slice(-12)
+  };
+  $("#debug-output").textContent=JSON.stringify(summary,null,2);
+}
+
+/* ========================================================================== */
+/* SECTION 17 — MASTER RENDER                                                  */
+/* ========================================================================== */
+
+function renderAll(){
+  renderCharacter();
+  renderResources();
+  renderInventory();
+  renderTalents();
+  renderWorld();
+  renderNpcs();
+  renderQuests();
+  renderCombat();
+  renderLootMarket();
+  renderProduction();
+  renderSave();
+}
+
+/* ========================================================================== */
+/* SECTION 18 — INPUT ROUTING                                                  */
+/* ========================================================================== */
+
+document.addEventListener("click",event=>{
+  const jump=event.target.closest("[data-jump]");
+  if(jump)document.getElementById(jump.dataset.jump)?.scrollIntoView({behavior:"smooth",block:"start"});
+
+  const skin=event.target.closest("[data-skin]");
+  if(skin)dispatch("SET_SKIN",{color:skin.dataset.skin});
+
+  const hair=event.target.closest("[data-hair]");
+  if(hair)dispatch("SET_HAIR",{color:hair.dataset.hair});
+
+  const cycle=event.target.closest("[data-cycle-slot]");
+  if(cycle)dispatch("CYCLE_EQUIPMENT",{slot:cycle.dataset.cycleSlot});
+
+  const item=event.target.closest("[data-item]");
+  if(item){selectedItemId=item.dataset.item;renderInventory()}
+
+  const itemAction=event.target.closest("[data-item-action]");
+  if(itemAction){
+    const type=itemAction.dataset.itemAction==="equip"?"EQUIP_ITEM":itemAction.dataset.itemAction==="use"?"USE_ITEM":"DISCARD_ITEM";
+    dispatch(type,{instanceId:itemAction.dataset.instance});
+  }
+
+  const talent=event.target.closest("[data-talent]");
+  if(talent){selectedTalentId=talent.dataset.talent;dispatch("UNLOCK_TALENT",{id:talent.dataset.talent})}
+
+  const move=event.target.closest("[data-move]");
+  if(move){
+    const vector={north:[0,-1],south:[0,1],west:[-1,0],east:[1,0]}[move.dataset.move];
+    dispatch("MOVE_WORLD",{dx:vector[0],dy:vector[1]});
+  }
+
+  const startNpc=event.target.closest("[data-start-npc]");
+  if(startNpc)dispatch("START_DIALOGUE",{npcId:startNpc.dataset.startNpc});
+
+  const dialogueChoice=event.target.closest("[data-dialogue-choice]");
+  if(dialogueChoice)dispatch("DIALOGUE_CHOICE",{index:Number(dialogueChoice.dataset.dialogueChoice)});
+
+  const quest=event.target.closest("[data-quest]");
+  if(quest){selectedQuestId=quest.dataset.quest;renderQuests()}
+
+  const pinQuest=event.target.closest("[data-pin-quest]");
+  if(pinQuest)dispatch("PIN_QUEST",{id:pinQuest.dataset.pinQuest});
+
+  const enterLocation=event.target.closest("[data-enter-location]");
+  if(enterLocation)dispatch("ENTER_LOCATION");
+
+  const room=event.target.closest("[data-room]");
+  if(room)dispatch("CHANGE_ROOM",{room:room.dataset.room});
+
+  const interiorAction=event.target.closest("[data-interior-action]");
+  if(interiorAction){
+    if(interiorAction.dataset.interiorAction==="exit")dispatch("EXIT_LOCATION");
+    else dispatch("INTERIOR_ACTION",{action:interiorAction.dataset.interiorAction});
+  }
+
+  const worldEncounter=event.target.closest("[data-world-encounter]");
+  if(worldEncounter){
+    const node=state.world.encounters.find(entry=>entry.id===worldEncounter.dataset.worldEncounter);
+    if(node)dispatch("START_COMBAT",{encounterId:node.encounterId,worldEncounterId:node.id});
+  }
+
+  const ability=event.target.closest("[data-ability]");
+  if(ability)dispatch("CHOOSE_ABILITY",{id:ability.dataset.ability});
+
+  const target=event.target.closest(".valid-target[data-unit-id]");
+  if(target)dispatch("SELECT_TARGET",{id:target.dataset.unitId});
+
+  const formationMember=event.target.closest("[data-formation-member]");
+  if(formationMember){
+    state.party.selectedFormation=formationMember.dataset.formationMember;
+    renderFormation();
+    event.stopPropagation();
+  }else{
+    const formationSlot=event.target.closest("[data-formation-slot]");
+    if(formationSlot&&state.party.selectedFormation)dispatch("MOVE_FORMATION",{member:state.party.selectedFormation,slot:Number(formationSlot.dataset.formationSlot)});
+  }
+
+  const buy=event.target.closest("[data-buy]");
+  if(buy)dispatch("BUY_ITEM",{definitionId:buy.dataset.buy});
+
+  const save=event.target.closest("[data-save]");
+  if(save)saveSlot(Number(save.dataset.save));
+
+  const load=event.target.closest("[data-load]");
+  if(load)loadSlot(Number(load.dataset.load));
+
+  const exp=event.target.closest("[data-export]");
+  if(exp)exportSlot(Number(exp.dataset.export));
+
+  const del=event.target.closest("[data-delete]");
+  if(del){storageRemove(saveKey(Number(del.dataset.delete)));renderSave()}
+
+  const demo=event.target.closest("[data-demo]");
+  if(demo)handleDemo(demo.dataset.demo);
+});
+
+function handleDemo(command){
+  if(command==="damage")dispatch("CHANGE_RESOURCE",{key:"health",amount:-18});
+  if(command==="cast"){dispatch("CHANGE_RESOURCE",{key:"mana",amount:-12});dispatch("CHANGE_RESOURCE",{key:"stamina",amount:-7})}
+  if(command==="rest")dispatch("REST");
+  if(command==="xp")dispatch("GAIN_XP",{amount:38});
+  if(command==="gather")dispatch("GATHER");
+  if(command==="talent-reset")dispatch("RESET_TALENTS");
+  if(command==="wild-combat")dispatch("START_COMBAT",{encounterId:"grass"});
+  if(command==="elite-combat")dispatch("START_COMBAT",{encounterId:"elite"});
+  if(command==="roll-loot")dispatch("GENERATE_LOOT");
+  if(command==="take-loot")dispatch("TAKE_LOOT");
+  if(command==="market-day")dispatch("ADVANCE_MARKET");
+}
+
+$("#cancel-target").addEventListener("click",()=>dispatch("CANCEL_TARGET"));
+$("#center-map").addEventListener("click",()=>{centerMap(true);drawMap()});
+$("#cancel-route").addEventListener("click",()=>{state.world.route=[];worldRuntime.routeOrigin=0;renderWorld()});
+$("#generate-world").addEventListener("click",()=>dispatch("GENERATE_WORLD",{seed:$("#world-seed").value}));
+$("#return-world").addEventListener("click",()=>document.getElementById("world")?.scrollIntoView({behavior:"smooth",block:"start"}));
+$("#reset-studio").addEventListener("click",()=>dispatch("RESET_STUDIO"));
+
+$("#aggression").addEventListener("input",event=>dispatch("SET_DIRECTOR",{key:"aggression",value:Number(event.target.value)}));
+$("#alert").addEventListener("input",event=>dispatch("SET_DIRECTOR",{key:"alert",value:Number(event.target.value)}));
+
+$("#map-wrap").addEventListener("pointerup",event=>{
+  if(event.pointerType==="mouse"&&event.button!==0)return;
+  const rect=$("#world-map-canvas").getBoundingClientRect();
+  const x=Math.floor((event.clientX-rect.left+worldRuntime.camera.x)/worldRuntime.tileSize);
+  const y=Math.floor((event.clientY-rect.top+worldRuntime.camera.y)/worldRuntime.tileSize);
+  if(!inWorld(x,y))return;
+  const distance=Math.abs(x-state.world.player.x)+Math.abs(y-state.world.player.y);
+  if(distance===1){dispatch("MOVE_WORLD",{dx:x-state.world.player.x,dy:y-state.world.player.y});return}
+  beginRoute({x,y});
+  renderWorld();
+});
+
+document.addEventListener("keydown",event=>{
+  if(event.metaKey||event.ctrlKey||event.altKey||/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName||""))return;
+  const vector={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0]}[event.key];
+  if(vector){event.preventDefault();dispatch("MOVE_WORLD",{dx:vector[0],dy:vector[1]})}
+});
+
+/* ========================================================================== */
+/* SECTION 19 — EVENT-ROUTED PRESENTATION                                      */
+/* ========================================================================== */
+
+subscribe(event=>{
+  if(event.type==="DAMAGE_DEALT"||event.type==="STATUS_TICK")emitFx("damage");
+  if(event.type==="HEAL_APPLIED"||event.type==="PARTY_RESTED")emitFx("heal");
+  if(event.type==="WORLD_TILE_ENTERED"||event.type==="LANDMARK_DISCOVERED")emitFx("world");
+  if(event.type==="QUEST_COMPLETED")emitFx("quest");
+  if(event.type==="COMBAT_VICTORY")emitFx("victory");
+  if(event.type==="DAMAGE_DEALT")vibrate([8,18,8]);
+  if(event.type==="COMBAT_VICTORY")vibrate([12,24,12,24,36]);
+});
+
+/* ========================================================================== */
+/* SECTION 20 — ANIMATION SCHEDULER AND LIFECYCLE                              */
+/* ========================================================================== */
+
+let lastFrame=performance.now();
+let animationFrame=0;
+
+function frame(time){
+  const dt=Math.min(.05,(time-lastFrame)/1000);
+  lastFrame=time;
+  if(!document.hidden){
+    worldRuntime.sceneTime+=dt;
+    worldRuntime.sceneTransition=Math.max(0,worldRuntime.sceneTransition-dt*1.7);
+    updateRoute(dt);
+    updateFx(dt);
+    drawDirector();
+    if(worldRuntime.sceneTransition>0||state.world.route.length)drawFirstPerson();
+  }
+  animationFrame=requestAnimationFrame(frame);
+}
+
+function resizeAll(){
+  resizeMapCanvas();
+  resizeViewCanvas();
+  resizeAi();
+  resizeFx();
+  renderAll();
+}
+
+new ResizeObserver(resizeMapCanvas).observe($("#map-wrap"));
+new ResizeObserver(resizeViewCanvas).observe($("#first-person-wrap"));
+new ResizeObserver(resizeAi).observe($("#ai-canvas").parentElement);
+new ResizeObserver(resizeFx).observe($("#fx-canvas").parentElement);
+window.addEventListener("resize",resizeAll,{passive:true});
+window.addEventListener("pagehide",()=>cancelAnimationFrame(animationFrame));
+window.addEventListener("pageshow",()=>{lastFrame=performance.now();cancelAnimationFrame(animationFrame);animationFrame=requestAnimationFrame(frame)});
+
+/* ========================================================================== */
+/* SECTION 21 — BOOT                                                           */
+/* ========================================================================== */
+
+ensureQuests();
+const bootEvents=[];
+generateWorld(state.world.seed,bootEvents);
+generateLoot(bootEvents);
+bootEvents.forEach(publish);
+renderAll();
+resizeAll();
+animationFrame=requestAnimationFrame(frame);
+
+</script>
+</body>
+</html>
